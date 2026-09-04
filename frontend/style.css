@@ -371,3 +371,58 @@ body::before{display:none}
 .lead-card-rich .lead-badges .status.on_hold{background:#d17a18;color:#fff}
 .lead-card-rich .lead-badges .status.won{background:#08a96f;color:#fff}
 .lead-card-rich .lead-badges .status.lost,.lead-card-rich .lead-badges .status.not_interested{background:#df4050;color:#fff}
+
+/* Phone layout: fixed bottom navigation, compact content and touch targets. */
+@media(max-width:760px){
+  html{scroll-padding-bottom:84px}
+  body{padding-bottom:env(safe-area-inset-bottom);overflow-x:hidden}
+  button,a,input,select,textarea{touch-action:manipulation}
+  .shell{padding:56px 0 calc(74px + env(safe-area-inset-bottom));min-height:100dvh}
+  .side{inset:auto 0 0;bottom:0;width:100%;height:calc(68px + env(safe-area-inset-bottom));min-height:0;padding:5px 6px env(safe-area-inset-bottom);display:block;background:rgba(5,5,5,.97);border-top:1px solid #252525;overflow:visible;z-index:20;backdrop-filter:blur(16px)}
+  .side .brand,.side-promo,.side-footer{display:none}
+  .side .nav{width:100%;height:62px;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px;overflow:visible}
+  .side .nav button{min-width:0;height:58px;padding:5px 2px;border-radius:10px;display:flex;flex-direction:column;justify-content:center;gap:2px;color:#bdb7c5;font-size:9px;line-height:1.1;text-align:center}
+  .side .nav button span{width:auto;font-size:20px;line-height:1}
+  .side .nav button.active{color:#fff;background:linear-gradient(145deg,#7130c1,#9344d8)}
+  .topbar{display:flex;left:0;height:56px;padding:0 12px;border-bottom-color:#ece8ef;z-index:19}
+  .topbar h1{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar h1:empty::before{content:"Boombastic CRM"}
+  .topbar .bell,.topbar .user-avatar,.topbar>b{display:none}
+  .logout-button{width:42px;height:42px;margin:0;font-size:20px}
+  .content{width:100%;padding:12px 10px 18px}
+  .quote{height:auto;min-height:84px;margin-bottom:12px;padding:14px 15px;border-radius:12px}
+  .quote b{font-size:11px}.quote p{padding:0;font-size:12px;line-height:1.35}.quote img,.quote::after{display:none}
+  .dashboard-quote{align-items:flex-start;gap:9px}.dashboard-quote .period-control{width:100%;align-items:stretch}.dashboard-quote select{width:100%}
+  .custom-dates.show{width:100%;display:grid;grid-template-columns:1fr 1fr}.custom-dates input{width:100%}
+  .kpi-row,.dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
+  .metric,.dashboard-kpis .metric{height:92px;padding:9px;gap:8px;justify-content:flex-start;min-width:0}
+  .metric-icon{width:38px;height:38px;flex:0 0 38px;font-size:20px}.metric>div{min-width:0}.metric b{font-size:26px}.metric small,.dashboard-kpis .metric small{margin-top:7px;font-size:8px;white-space:normal;line-height:1.15}
+  .leads-panel{padding:0 9px 10px;border-radius:11px}.leads-panel h1{font-size:21px}.leads-title{min-height:48px}
+  .filters{grid-template-columns:1fr;gap:8px;padding-bottom:11px}.filters input,.filters select,.searchbox,.filters .btn{width:100%;height:44px}.filters .btn{font-size:13px}
+  .lead-cards{gap:12px;padding:0}.lead-card-rich{min-height:0;padding:0 14px 14px;border-radius:14px}.lead-card-rich header{padding-top:19px}.lead-card-tags{min-height:0;margin-bottom:7px}.lead-origin{min-height:0}.rich-card-actions a,.rich-card-actions button{height:46px}
+  .table-wrap,.panel,.follow-table-wrap,.team-report,.report-line,.performance,.team-card{overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch}
+  .table-wrap:after,.follow-table-wrap:after{content:"Swipe horizontally to see more";position:sticky;left:0;display:block;padding:8px 10px;color:#89818f;background:#faf8fc;font-size:9px;text-align:center}
+  .table-footer{height:auto;min-height:54px;padding:10px 5px;grid-template-columns:1fr auto;gap:8px}.table-footer>label{white-space:nowrap}.table-footer select{margin-left:4px;padding:7px}
+  .dash-grid,.dash-stack{gap:10px}.dash-card{border-radius:11px}.dash-card h2{font-size:16px;margin:13px 14px 7px}
+  .performance svg{min-width:520px}.chart-key{left:180px;gap:15px;font-size:10px}
+  .status-content{padding:12px}.donut{width:165px;height:165px}.legend{min-width:0;gap:12px}.legend span,.legend b{font-size:12px}
+  .follow-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.follow-metric{height:78px;grid-template-columns:42px 1fr;padding:9px}.follow-metric i{width:36px;height:36px;font-size:17px}.follow-metric b{font-size:21px}.follow-metric small{font-size:8px}
+  .follow-toolbar{padding:10px;gap:9px}.follow-tabs button{min-height:42px;padding:0 12px}.follow-toolbar label{width:100%;min-height:44px}.follow-toolbar .btn{width:100%;min-height:44px}
+  .booking-head{gap:10px;margin-bottom:15px}.booking-head h1{font-size:23px}.booking-head p{font-size:11px}.booking-title-icon{width:44px;height:44px;font-size:21px}.booking-head>.btn{height:44px}
+  .booking-tabs{margin-bottom:13px;padding:4px;border-radius:12px}.booking-tabs button{height:44px;padding:0 10px;font-size:11px}
+  .booking-calendar{padding:14px 8px 17px;border-radius:13px;overflow:visible}.booking-calendar>header{margin-bottom:14px}.booking-calendar h2{font-size:17px}.booking-calendar>header div{gap:2px}.booking-calendar>header button{min-width:40px;height:40px}.booking-calendar>header button#booking-today{padding:0 8px}
+  .calendar-weekdays,.calendar-grid{min-width:0;grid-template-columns:repeat(7,minmax(0,1fr))}.calendar-weekdays b{padding:0 1px 7px;font-size:8px}.booking-day{min-width:0;min-height:70px;padding:5px 3px;border-radius:6px}.booking-day>b{font-size:10px}.booking-day>div{gap:3px;margin-top:4px}.calendar-event{height:20px;padding:0 3px;font-size:8px}.booking-day div>small{display:none}
+  .reports-head{margin-bottom:12px}.reports-head>div:last-child{display:grid;grid-template-columns:1fr 1fr;gap:8px}.reports-head select,.reports-head button{width:100%;height:44px}.reports-head .custom-dates{grid-column:1/-1}.reports-head button{grid-column:1/-1}
+  .report-grid{gap:10px}.report-card{border-radius:11px}.report-line svg{min-width:520px}.source-donut{width:135px;height:135px}.source-donut:after{inset:42px}
+  .modalback{align-items:end;padding:0}.modal{width:100%;max-height:94dvh;padding:20px 16px calc(18px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0}.modal h2{font-size:22px}.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.field input,.field select,.field textarea{min-height:46px}.modalfoot{position:sticky;bottom:0;margin:17px -16px -18px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #eee}.modalfoot .btn{min-height:44px;flex:1}
+  .lead-drawer{height:100dvh}.drawer-head{min-height:88px;padding:14px}.drawer-body{padding:15px 13px calc(88px + env(safe-area-inset-bottom))}.drawer-close{width:44px;height:44px;font-size:28px}.drawer-actions a{min-height:44px}.client-details,.lead-management{padding:14px;gap:15px}.choice-pills span{min-height:42px}.save-drawer,.schedule-lead-meeting{min-height:48px}
+  .login{min-height:100dvh;padding:18px 0}.login::before{display:none}.loginbox{width:calc(100% - 24px);padding:24px 18px;border-radius:22px}.logo-login{width:100%;height:auto;max-height:92px}.loginbox h1{font-size:28px}.loginbox input,.loginbox button{min-height:48px}
+  #toast{left:12px;right:12px;bottom:calc(78px + env(safe-area-inset-bottom));border-radius:12px;text-align:center}
+}
+
+@media(max-width:390px){
+  .side .nav button{font-size:8px}.side .nav button span{font-size:18px}
+  .metric-icon{width:34px;height:34px;flex-basis:34px}.metric b{font-size:23px}
+  .report-metrics{grid-template-columns:1fr}.report-metric{height:88px}
+  .rich-card-actions{gap:6px}.rich-card-actions a,.rich-card-actions button{font-size:9px}
+}
