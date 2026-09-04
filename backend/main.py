@@ -2,6 +2,9 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from routes import leads, meetings, proposals, agreements, projects, dashboard, auth, meta
 from db import leads_collection, meetings_collection, proposals_collection, agreements_collection, projects_collection, users_collection
