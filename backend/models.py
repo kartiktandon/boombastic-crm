@@ -44,6 +44,7 @@ class BusinessSettings(BaseModel):
     notify_bookings: bool = True
 
 class LeadBase(BaseModel):
+    business_unit: str = Field(default="superfun", max_length=80)
     name: str = Field(min_length=2, max_length=140)
     company: Optional[str] = Field(default=None, max_length=160)
     email: Optional[str] = Field(default=None, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -75,6 +76,7 @@ class LeadBase(BaseModel):
 class LeadCreate(LeadBase): pass
 
 class LeadUpdate(BaseModel):
+    business_unit: Optional[str] = Field(default=None, max_length=80)
     name: Optional[str] = Field(default=None, min_length=2, max_length=140)
     company: Optional[str] = Field(default=None, max_length=160)
     email: Optional[str] = Field(default=None, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")

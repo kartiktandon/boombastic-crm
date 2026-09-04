@@ -24,10 +24,11 @@ async def list_stages(_: dict = Depends(get_current_user)):
     return [{"id": stage, "label": stage.replace("_", " ").title()} for stage in STAGES]
 
 @router.get("/analytics")
-async def analytics(_: dict = Depends(get_current_user)):
-    pipeline = [{"$group": {"_id": "$status", "count": {"$sum": 1}}}]
+async def analytics(business_unit: str | None = None, _: dict = Depends(get_current_user)):
+    match = {"business_unit": {"$in": ["superfun", "uperfun", None]}} if business_unit == "superfun" else ({"business_unit": business_unit} if business_unit else {})
+    pipeline = ([{"$match": match}] if match else []) + [{"$group": {"_id": "$status", "count": {"$sum": 1}}}]
     by_stage = {row["_id"]: row["count"] for row in await leads_collection.aggregate(pipeline).to_list(50)}
-    platform_pipeline = [{"$group": {"_id": "$source", "count": {"$sum": 1}}}]
+    platform_pipeline = ([{"$match": match}] if match else []) + [{"$group": {"_id": "$source", "count": {"$sum": 1}}}]
     by_platform = {row["_id"]: row["count"] for row in await leads_collection.aggregate(platform_pipeline).to_list(50)}
     total = sum(by_stage.values())
     won = by_stage.get("won", 0)
@@ -43,11 +44,13 @@ async def create_lead(lead: LeadCreate, current_user: dict = Depends(get_current
 
 @router.get("/")
 async def list_leads(
-    status: str | None = None, source: str | None = None, assigned_to: str | None = None,
+    status: str | None = None, source: str | None = None, assigned_to: str | None = None, business_unit: str | None = None,
     q: str | None = None, follow_up: str | None = None, page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100), sort: str = "newest", _: dict = Depends(get_current_user),
 ):
     query = {}
+    if business_unit:
+        query["business_unit"] = {"$in": ["superfun", "uperfun", None]} if business_unit == "superfun" else business_unit
     for field, value in (("status", status), ("source", source), ("assigned_to", assigned_to)):
         if value: query[field] = value
     if q:

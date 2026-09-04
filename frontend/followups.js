@@ -13,7 +13,7 @@ function followupTabRow(lead, completed = false) {
 }
 
 followups = async function () {
-  const data = await api("/leads/?limit=100"), all = data.items || [];
+  const data = await api("/leads/?limit=100" + (state.businessUnit ? "&" + companySearch() : "")), all = data.items || [];
   state.leads = all;
   const now = new Date(), dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()), tomorrow = new Date(dayStart);
   tomorrow.setDate(tomorrow.getDate() + 1);

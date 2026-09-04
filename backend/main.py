@@ -15,6 +15,7 @@ async def lifespan(_: FastAPI):
     await users_collection.create_index("email", unique=True)
     await leads_collection.create_index([("status", 1), ("created_at", -1)])
     await leads_collection.create_index([("assigned_to", 1), ("next_follow_up", 1)])
+    await leads_collection.create_index([("business_unit", 1), ("created_at", -1)])
     await leads_collection.create_index("meta_lead_id", unique=True, sparse=True)
     await meetings_collection.create_index([("scheduled_at", 1), ("lead_id", 1)])
     await proposals_collection.create_index([("lead_id", 1), ("status", 1)])
