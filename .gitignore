@@ -1,0 +1,70 @@
+# macOS and operating-system files
+.DS_Store
+Thumbs.db
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Python virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Python build and packaging output
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Local secrets and environment configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local databases, exports, and runtime state
+*.db
+*.sqlite
+*.sqlite3
+*.log
+logs/
+tmp/
+temp/
+uploads/
+exports/
+
+# JavaScript dependencies and generated output
+node_modules/
+.npm/
+.yarn/
+.pnpm-store/
+.parcel-cache/
+.vite/
+.next/
+out/
+
+# IDE and editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local tooling metadata
+.codex/
+.agents/
