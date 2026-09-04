@@ -22,7 +22,14 @@ async def lifespan(_: FastAPI):
     await projects_collection.create_index([("lead_id", 1), ("status", 1)])
     yield
 
-app = FastAPI(title="Growth CRM API", version="2.0", lifespan=lifespan)
+# Vercel runs application lifespan handling separately from the request loop.
+# Motor binds its futures to the loop where the first database operation runs,
+# so startup-time index creation must stay disabled in that environment.
+app = FastAPI(
+    title="Growth CRM API",
+    version="2.0",
+    lifespan=None if os.getenv("VERCEL") else lifespan,
+)
 
 app.add_middleware(
     CORSMiddleware,
