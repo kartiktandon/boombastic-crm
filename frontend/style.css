@@ -426,3 +426,28 @@ body::before{display:none}
   .report-metrics{grid-template-columns:1fr}.report-metric{height:88px}
   .rich-card-actions{gap:6px}.rich-card-actions a,.rich-card-actions button{font-size:9px}
 }
+
+/* Polished mobile identity and navigation states. */
+@media(max-width:760px){
+  .shell{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+  .side{left:8px;right:8px;bottom:calc(7px + env(safe-area-inset-bottom));width:auto;height:68px;padding:5px 6px;border:1px solid #29242f;border-radius:19px;background:rgba(13,11,16,.96);box-shadow:0 12px 34px rgba(21,9,30,.32);overflow:hidden}
+  .side .nav{height:56px}
+  .side .nav button,.side .nav button:hover,.side .nav button:focus,.side .nav button:active{height:56px;color:#aaa3b1;background:transparent!important;box-shadow:none!important;border:0!important;border-bottom:0!important;outline:0!important;text-decoration:none!important;-webkit-tap-highlight-color:transparent}
+  .side .nav button::before,.side .nav button::after{display:none!important;content:none!important}
+  .side .nav button span{width:34px;height:29px;border:0!important;border-bottom:0!important;border-radius:9px;text-decoration:none!important;transition:background .15s,color .15s,transform .15s}
+  .side .nav button.active{color:#d8a6ff}
+  .side .nav button.active span{color:#fff;background:#843bd0;box-shadow:none!important;transform:translateY(-1px)}
+  .side .nav button:focus-visible span{outline:2px solid #fff;outline-offset:2px}
+  .topbar{gap:8px;padding:0 10px;background:rgba(255,255,255,.96);box-shadow:0 4px 15px rgba(51,25,66,.07);backdrop-filter:blur(14px)}
+  .topbar h1{max-width:42%;margin-right:auto;font-size:16px}
+  .topbar h1:empty::before{content:none}
+  .topbar .user-avatar{width:34px;height:34px;flex:0 0 34px;display:grid;border-radius:11px;background:linear-gradient(145deg,#7130c1,#a14cdf);font:700 11px 'DM Sans',sans-serif;box-shadow:0 4px 10px rgba(113,48,193,.24)}
+  .topbar>b{display:block;max-width:82px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#3d3543}
+  .logout-button{width:38px;height:38px;border-radius:11px;background:#f8f3fb}
+  #toast{bottom:calc(88px + env(safe-area-inset-bottom))}
+}
+
+@media(max-width:370px){
+  .topbar h1{max-width:34%;font-size:14px}.topbar>b{max-width:64px;font-size:10px}
+  .side{left:5px;right:5px}.side .nav button{font-size:7px}.side .nav button span{width:30px}
+}
