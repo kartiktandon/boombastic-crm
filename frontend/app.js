@@ -35,7 +35,8 @@ const quote = `<section class="quote"><div><b>👋 &nbsp; GOOD AFTERNOON, ${(sta
 async function render(){if(!state.token)return login();try{if(state.view==="dashboard")return dashboard();if(state.view==="leads")return leads();if(state.view==="followups")return followups();if(state.view==="bookings")return bookings();if(state.view==="reports")return reports();if(state.view==="agreements")return agreements();return projects()}catch(e){shell(`<div class="empty">Could not load this workspace.<br/><small>${esc(e.message)}</small></div>`)}}
 async function leads(){
  shell(quote+`<div id="leadbody"><div class="empty">Loading leads…</div></div>`);
- const qs=new URLSearchParams(Object.entries(state.filters).filter(([,v])=>v)); const data=await api("/leads/?"+qs);state.leads=data.items;const a=await api("/leads/analytics");
+ const qs=new URLSearchParams(Object.entries(state.filters).filter(([,v])=>v));
+ const [data,a]=await Promise.all([api("/leads/?"+qs),api("/leads/analytics")]);state.leads=data.items;
  const today=state.leads.filter(l=>l.created_at&&new Date(l.created_at).toDateString()===new Date().toDateString()).length;
  const interested=(a.by_stage.interested||0), followups=(a.by_stage.call_back||0)+(a.by_stage.ringing||0), dead=(a.by_stage.lost||0)+(a.by_stage.not_interested||0);
  const cards=[["people",a.total,"TOTAL LEADS"],["calendar",today,"TODAY'S LEADS"],["clock",followups,"FOLLOW-UP"],["heart",interested,"INTERESTED"],["trophy",a.won,"CLOSED / WON"],["close",dead,"DEAD LEADS"]];
