@@ -58,6 +58,7 @@ class LeadBase(BaseModel):
     temperature: Literal["hot", "warm", "cold"] = "warm"
     assigned_to: Optional[str] = Field(default=None, max_length=120)
     next_follow_up: Optional[datetime] = None
+    last_follow_up_completed_at: Optional[datetime] = None
     tags: list[str] = Field(default_factory=list)
     project_name: Optional[str] = Field(default=None, max_length=180)
     alternate_phones: list[str] = Field(default_factory=list)
@@ -88,6 +89,7 @@ class LeadUpdate(BaseModel):
     temperature: Optional[Literal["hot", "warm", "cold"]] = None
     assigned_to: Optional[str] = Field(default=None, max_length=120)
     next_follow_up: Optional[datetime] = None
+    last_follow_up_completed_at: Optional[datetime] = None
     tags: Optional[list[str]] = None
     closed_amount: Optional[float] = Field(default=None, ge=0)
     project_name: Optional[str] = Field(default=None, max_length=180)
