@@ -23,6 +23,26 @@ class UserRegister(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     role: Literal["admin", "sales_lead", "sales_rep", "delivery"] = "sales_rep"
 
+class BusinessSettings(BaseModel):
+    business_name: str = Field(default="Boombastic", min_length=2, max_length=120)
+    business_type: str = Field(default="Entertainment & Events", max_length=120)
+    business_email: Optional[str] = Field(default=None, max_length=160)
+    business_phone: Optional[str] = Field(default=None, max_length=40)
+    website: Optional[str] = Field(default=None, max_length=300)
+    address: Optional[str] = Field(default=None, max_length=300)
+    timezone: str = Field(default="Asia/Kolkata", max_length=80)
+    default_lead_owner: Optional[str] = Field(default=None, max_length=120)
+    auto_assign_leads: bool = False
+    followup_reminder_minutes: int = Field(default=30, ge=0, le=10080)
+    inactivity_days: int = Field(default=7, ge=1, le=365)
+    weekday_start: str = "10:00"
+    weekday_end: str = "20:00"
+    weekend_start: str = "10:00"
+    weekend_end: str = "22:00"
+    notify_new_leads: bool = True
+    notify_followups: bool = True
+    notify_bookings: bool = True
+
 class LeadBase(BaseModel):
     name: str = Field(min_length=2, max_length=140)
     company: Optional[str] = Field(default=None, max_length=160)

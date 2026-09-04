@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from routes import leads, meetings, proposals, agreements, projects, dashboard, auth, meta
+from routes import leads, meetings, proposals, agreements, projects, dashboard, auth, meta, settings
 from db import leads_collection, meetings_collection, proposals_collection, agreements_collection, projects_collection, users_collection
 
 
@@ -46,6 +46,7 @@ app.include_router(agreements.router)
 app.include_router(projects.router)
 app.include_router(dashboard.router)
 app.include_router(meta.router)
+app.include_router(settings.router)
 
 
 @app.get("/")
