@@ -12,7 +12,7 @@ from utils import serialize, serialize_list, to_object_id
 
 router = APIRouter(prefix="/leads", tags=["leads"])
 
-STAGES = ["new", "contacted", "interested", "call_back", "meeting_done", "proposal_sent", "on_hold", "not_interested", "won", "lost", "ringing"]
+STAGES = ["new", "contacted", "interested", "call_back", "meeting_done", "proposal_sent", "packages_sent", "low_budget", "on_hold", "not_interested", "won", "lost", "ringing"]
 MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024
 ALLOWED_ATTACHMENT_EXTENSIONS = {".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv", ".jpg", ".jpeg", ".png", ".webp"}
 

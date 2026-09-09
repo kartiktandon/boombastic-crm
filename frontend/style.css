@@ -589,3 +589,8 @@ body::before{display:none}
   .lead-kpis .metric .metric-icon{width:30px;height:30px;flex-basis:30px;font-size:18px}
   .lead-kpis .metric b{font-size:24px}
 }
+
+.status.packages_sent,.chip.packages_sent{background:#f1e8fb;color:#7135a5}
+.status.low_budget,.chip.low_budget{background:#fff3dc;color:#95600c}
+.lead-card-rich .lead-badges .status.packages_sent{background:#7135a5;color:#fff}
+.lead-card-rich .lead-badges .status.low_budget{background:#95600c;color:#fff}
