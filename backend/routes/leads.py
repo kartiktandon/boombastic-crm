@@ -53,6 +53,8 @@ async def list_leads(
         query["business_unit"] = {"$in": ["superfun", "uperfun", None]} if business_unit == "superfun" else business_unit
     for field, value in (("status", status), ("source", source), ("service", service), ("assigned_to", assigned_to)):
         if value: query[field] = value
+    if service == "Other":
+        query["service"] = {"$nin": ["Walk-in", "Birthday Party", "Corporate Event", "Kitty Party", "Wedding", "Private Event"]}
     if q:
         query["$or"] = [{field: {"$regex": q, "$options": "i"}} for field in ["name", "company", "email", "phone", "city", "campaign"]]
     today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
