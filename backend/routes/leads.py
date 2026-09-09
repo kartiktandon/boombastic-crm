@@ -45,13 +45,13 @@ async def create_lead(lead: LeadCreate, current_user: dict = Depends(get_current
 @router.get("/")
 async def list_leads(
     status: str | None = None, source: str | None = None, assigned_to: str | None = None, business_unit: str | None = None,
-    q: str | None = None, follow_up: str | None = None, page: int = Query(1, ge=1),
+    service: str | None = None, q: str | None = None, follow_up: str | None = None, page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100), sort: str = "newest", _: dict = Depends(get_current_user),
 ):
     query = {}
     if business_unit:
         query["business_unit"] = {"$in": ["superfun", "uperfun", None]} if business_unit == "superfun" else business_unit
-    for field, value in (("status", status), ("source", source), ("assigned_to", assigned_to)):
+    for field, value in (("status", status), ("source", source), ("service", service), ("assigned_to", assigned_to)):
         if value: query[field] = value
     if q:
         query["$or"] = [{field: {"$regex": q, "$options": "i"}} for field in ["name", "company", "email", "phone", "city", "campaign"]]
