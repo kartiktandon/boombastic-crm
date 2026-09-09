@@ -53,6 +53,7 @@ class LeadBase(BaseModel):
     source: Platform = "website"
     campaign: Optional[str] = Field(default=None, max_length=160)
     service: Optional[str] = Field(default=None, max_length=160)
+    number_of_people: Optional[int] = Field(default=None, ge=1, le=2147483647)
     budget: Optional[str] = Field(default=None, max_length=80)
     timeline: Optional[str] = Field(default=None, max_length=80)
     status: LeadStatus = "new"
@@ -85,6 +86,7 @@ class LeadUpdate(BaseModel):
     source: Optional[Platform] = None
     campaign: Optional[str] = Field(default=None, max_length=160)
     service: Optional[str] = Field(default=None, max_length=160)
+    number_of_people: Optional[int] = Field(default=None, ge=1, le=2147483647)
     budget: Optional[str] = Field(default=None, max_length=80)
     timeline: Optional[str] = Field(default=None, max_length=80)
     status: Optional[LeadStatus] = None
