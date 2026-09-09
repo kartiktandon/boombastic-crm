@@ -486,3 +486,14 @@ body::before{display:none}
 .company-badge{padding:3px 8px;border-radius:10px;background:#25202b;color:#fff;font-size:9px;font-weight:800;text-transform:uppercase}.company-badge.boozeria{background:#e76f27}.company-badge.superfun{background:#2769d8}.drawer-company-field{margin-bottom:4px;display:flex;flex-direction:column;gap:7px;color:#6d6573;font-size:11px;font-weight:700;text-transform:uppercase}.drawer-company-field select{height:44px;padding:0 12px;border:1px solid #ddd5e2;border-radius:9px;background:#fff;color:#342c39;font:600 13px 'DM Sans',sans-serif;text-transform:none}
 @media(max-width:760px){.company-switcher{height:38px;margin:0 2px 0 auto;padding:3px;border-radius:10px}.company-switcher span{display:none}.company-switcher select{min-width:96px;width:96px;height:30px;padding-left:7px;font-size:10px}.topbar h1{max-width:24%}.topbar>b{display:none!important}}
 @media(max-width:390px){.company-switcher select{min-width:84px;width:84px;font-size:9px}.topbar h1{max-width:21%}}
+
+/* Functional lead pagination, including mobile card view. */
+.pagination button{min-width:34px;width:auto;padding:0 10px;background:#fff;color:#555;cursor:pointer;font:inherit}
+.pagination button[aria-current="page"]{background:#7937c5;color:#fff;border-color:#7937c5}
+.pagination button:disabled{opacity:.45;cursor:default}
+.pagination button:focus-visible{outline:2px solid #7937c5;outline-offset:2px}
+@media(max-width:760px){
+ .table-footer{height:auto;min-height:59px;padding:12px;gap:12px}
+ .table-footer .pagination{display:flex;grid-column:1 / -1;grid-row:2;justify-content:center;flex-wrap:wrap}
+ .table-footer .pagination:empty{display:none}
+}
