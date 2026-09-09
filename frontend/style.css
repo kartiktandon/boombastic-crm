@@ -497,3 +497,8 @@ body::before{display:none}
  .table-footer .pagination{display:flex;grid-column:1 / -1;grid-row:2;justify-content:center;flex-wrap:wrap}
  .table-footer .pagination:empty{display:none}
 }
+
+.delete-lead-button{width:100%;min-height:44px;margin-top:12px;padding:10px 16px;border:1px solid #fecaca;border-radius:9px;background:#fff1f2;color:#b91c1c;font:600 13px 'DM Sans',sans-serif;cursor:pointer}
+.delete-lead-button:hover{background:#fee2e2;border-color:#f87171}
+.delete-lead-button:focus-visible{outline:2px solid #b91c1c;outline-offset:3px}
+.delete-lead-button:disabled{opacity:.6;cursor:wait}
