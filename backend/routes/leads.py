@@ -12,7 +12,7 @@ from utils import serialize, serialize_list, to_object_id
 
 router = APIRouter(prefix="/leads", tags=["leads"])
 
-STAGES = ["new", "contacted", "interested", "call_back", "follow_up", "meeting_done", "proposal_sent", "packages_sent", "low_budget", "on_hold", "not_interested", "won", "lost", "ringing"]
+STAGES = ["call_back", "follow_up", "meeting_done", "proposal_sent", "packages_sent", "low_budget", "on_hold", "ringing"]
 MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024
 ALLOWED_ATTACHMENT_EXTENSIONS = {".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv", ".jpg", ".jpeg", ".png", ".webp"}
 
@@ -26,13 +26,16 @@ async def list_stages(_: dict = Depends(get_current_user)):
 @router.get("/analytics")
 async def analytics(business_unit: str | None = None, _: dict = Depends(get_current_user)):
     match = {"business_unit": {"$in": ["superfun", "uperfun", None]}} if business_unit == "superfun" else ({"business_unit": business_unit} if business_unit else {})
-    pipeline = ([{"$match": match}] if match else []) + [{"$group": {"_id": "$status", "count": {"$sum": 1}}}]
-    by_stage = {row["_id"]: row["count"] for row in await leads_collection.aggregate(pipeline).to_list(50)}
+    status_pipeline = ([{"$match": match}] if match else []) + [{"$group": {"_id": "$status", "count": {"$sum": 1}}}]
+    by_status = {row["_id"]: row["count"] for row in await leads_collection.aggregate(status_pipeline).to_list(50)}
+    stage_expression = {"$ifNull": ["$stage", {"$cond": [{"$in": ["$status", STAGES]}, "$status", None]}]}
+    stage_pipeline = ([{"$match": match}] if match else []) + [{"$group": {"_id": stage_expression, "count": {"$sum": 1}}}]
+    by_stage = {row["_id"]: row["count"] for row in await leads_collection.aggregate(stage_pipeline).to_list(50) if row["_id"]}
     platform_pipeline = ([{"$match": match}] if match else []) + [{"$group": {"_id": "$source", "count": {"$sum": 1}}}]
     by_platform = {row["_id"]: row["count"] for row in await leads_collection.aggregate(platform_pipeline).to_list(50)}
-    total = sum(by_stage.values())
-    won = by_stage.get("won", 0)
-    return {"total": total, "won": won, "conversion": round((won / total * 100) if total else 0, 1), "by_stage": by_stage, "by_platform": by_platform}
+    total = sum(by_status.values())
+    won = by_status.get("won", 0)
+    return {"total": total, "won": won, "conversion": round((won / total * 100) if total else 0, 1), "by_status": by_status, "by_stage": by_stage, "by_platform": by_platform}
 
 @router.post("/", status_code=201)
 async def create_lead(lead: LeadCreate, current_user: dict = Depends(get_current_user)):
@@ -44,7 +47,7 @@ async def create_lead(lead: LeadCreate, current_user: dict = Depends(get_current
 
 @router.get("/")
 async def list_leads(
-    status: str | None = None, source: str | None = None, assigned_to: str | None = None, business_unit: str | None = None,
+    status: str | None = None, stage: str | None = None, source: str | None = None, assigned_to: str | None = None, business_unit: str | None = None,
     service: str | None = None, q: str | None = None, follow_up: str | None = None, page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100), sort: str = "newest", _: dict = Depends(get_current_user),
 ):
@@ -53,10 +56,16 @@ async def list_leads(
         query["business_unit"] = {"$in": ["superfun", "uperfun", None]} if business_unit == "superfun" else business_unit
     for field, value in (("status", status), ("source", source), ("service", service), ("assigned_to", assigned_to)):
         if value: query[field] = value
+    if stage:
+        query["$or"] = [{"stage": stage}, {"stage": {"$exists": False}, "status": stage}]
     if service == "Other":
         query["service"] = {"$nin": ["Walk-in", "Birthday Party", "Corporate Event", "Kitty Party", "Wedding", "Private Event"]}
     if q:
-        query["$or"] = [{field: {"$regex": q, "$options": "i"}} for field in ["name", "company", "email", "phone", "city", "campaign"]]
+        search = [{field: {"$regex": q, "$options": "i"}} for field in ["name", "company", "email", "phone", "city", "campaign"]]
+        if "$or" in query:
+            query["$and"] = [{"$or": query.pop("$or")}, {"$or": search}]
+        else:
+            query["$or"] = search
     today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     if follow_up == "overdue": query["next_follow_up"] = {"$lt": today}
     elif follow_up == "today": query["next_follow_up"] = {"$gte": today, "$lt": today + timedelta(days=1)}

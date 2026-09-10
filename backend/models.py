@@ -3,7 +3,8 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
-LeadStatus = Literal["new", "contacted", "interested", "call_back", "follow_up", "meeting_done", "proposal_sent", "packages_sent", "low_budget", "on_hold", "not_interested", "won", "lost", "ringing"]
+LeadStatus = Literal["new", "contacted", "interested", "not_interested", "won", "lost"]
+LeadStage = Literal["call_back", "follow_up", "meeting_done", "proposal_sent", "packages_sent", "low_budget", "on_hold", "ringing"]
 Platform = Literal["facebook", "instagram", "meta", "website", "referral", "event", "outbound", "manual_adding", "other"]
 
 class Note(BaseModel):
@@ -57,6 +58,7 @@ class LeadBase(BaseModel):
     budget: Optional[str] = Field(default=None, max_length=80)
     timeline: Optional[str] = Field(default=None, max_length=80)
     status: LeadStatus = "new"
+    stage: Optional[LeadStage] = None
     temperature: Literal["hot", "warm", "cold"] = "warm"
     assigned_to: Optional[str] = Field(default=None, max_length=120)
     next_follow_up: Optional[datetime] = None
@@ -90,6 +92,7 @@ class LeadUpdate(BaseModel):
     budget: Optional[str] = Field(default=None, max_length=80)
     timeline: Optional[str] = Field(default=None, max_length=80)
     status: Optional[LeadStatus] = None
+    stage: Optional[LeadStage] = None
     temperature: Optional[Literal["hot", "warm", "cold"]] = None
     assigned_to: Optional[str] = Field(default=None, max_length=120)
     next_follow_up: Optional[datetime] = None
