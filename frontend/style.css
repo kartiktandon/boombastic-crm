@@ -364,7 +364,7 @@ body::before{display:none}
 .lead-card-rich .lead-badges .status.new{background:#596579;color:#fff}
 .lead-card-rich .lead-badges .status.contacted{background:#3678e8;color:#fff}
 .lead-card-rich .lead-badges .status.interested{background:#7d3bd1;color:#fff}
-.lead-card-rich .lead-badges .status.call_back,.lead-card-rich .lead-badges .status.ringing{background:#f19b18;color:#fff}
+.lead-card-rich .lead-badges .status.call_back,.lead-card-rich .lead-badges .status.follow_up,.lead-card-rich .lead-badges .status.ringing{background:#f19b18;color:#fff}
 .lead-card-rich .lead-badges .status.meeting_done{background:#10a99f;color:#fff}
 .lead-card-rich .lead-badges .status.proposal_sent{background:#9444dc;color:#fff}
 .lead-card-rich .lead-badges .status.on_hold{background:#d17a18;color:#fff}

@@ -12,7 +12,7 @@ from utils import serialize, serialize_list, to_object_id
 
 router = APIRouter(prefix="/leads", tags=["leads"])
 
-STAGES = ["new", "contacted", "interested", "call_back", "meeting_done", "proposal_sent", "packages_sent", "low_budget", "on_hold", "not_interested", "won", "lost", "ringing"]
+STAGES = ["new", "contacted", "interested", "call_back", "follow_up", "meeting_done", "proposal_sent", "packages_sent", "low_budget", "on_hold", "not_interested", "won", "lost", "ringing"]
 MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024
 ALLOWED_ATTACHMENT_EXTENSIONS = {".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv", ".jpg", ".jpeg", ".png", ".webp"}
 
@@ -21,7 +21,7 @@ def activity(kind: str, message: str, user: dict):
 
 @router.get("/stages")
 async def list_stages(_: dict = Depends(get_current_user)):
-    return [{"id": stage, "label": stage.replace("_", " ").title()} for stage in STAGES]
+    return [{"id": stage, "label": "Follow-up" if stage == "follow_up" else stage.replace("_", " ").title()} for stage in STAGES]
 
 @router.get("/analytics")
 async def analytics(business_unit: str | None = None, _: dict = Depends(get_current_user)):

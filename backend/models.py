@@ -3,7 +3,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
-LeadStatus = Literal["new", "contacted", "interested", "call_back", "meeting_done", "proposal_sent", "packages_sent", "low_budget", "on_hold", "not_interested", "won", "lost", "ringing"]
+LeadStatus = Literal["new", "contacted", "interested", "call_back", "follow_up", "meeting_done", "proposal_sent", "packages_sent", "low_budget", "on_hold", "not_interested", "won", "lost", "ringing"]
 Platform = Literal["facebook", "instagram", "meta", "website", "referral", "event", "outbound", "manual_adding", "other"]
 
 class Note(BaseModel):
