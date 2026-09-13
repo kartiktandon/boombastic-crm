@@ -61,6 +61,7 @@ class LeadBase(BaseModel):
     stage: Optional[LeadStage] = None
     temperature: Literal["hot", "warm", "cold"] = "warm"
     assigned_to: Optional[str] = Field(default=None, max_length=120)
+    event_date: Optional[datetime] = None
     next_follow_up: Optional[datetime] = None
     last_follow_up_completed_at: Optional[datetime] = None
     tags: list[str] = Field(default_factory=list)
@@ -95,6 +96,7 @@ class LeadUpdate(BaseModel):
     stage: Optional[LeadStage] = None
     temperature: Optional[Literal["hot", "warm", "cold"]] = None
     assigned_to: Optional[str] = Field(default=None, max_length=120)
+    event_date: Optional[datetime] = None
     next_follow_up: Optional[datetime] = None
     last_follow_up_completed_at: Optional[datetime] = None
     tags: Optional[list[str]] = None
