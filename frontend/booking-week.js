@@ -63,6 +63,20 @@ bookings = async function() {
   const scoped=state.businessUnit?items.filter(item=>ids.has(item.lead_id)):items;
   shell(`<div class="booking-head"><div class="booking-title-icon">▣</div><div><h1>Bookings</h1><p>Your team's schedule, hour by hour</p></div><button class="btn primary" id="newitem">＋ Schedule Booking</button></div><div class="booking-tabs"><button class="active" data-week-view="week">Week & Time</button><button data-week-view="calendar">Month</button><button data-week-view="list">List View</button></div>${bookingWeek(scoped,leads)}`);
   document.querySelectorAll("[data-week-view]").forEach(button=>button.onclick=()=>{state.bookingView=button.dataset.weekView;bookings()});
+  const navigation=document.createElement("nav");
+  navigation.setAttribute("aria-label","Week navigation");
+  navigation.innerHTML='<button type="button" data-week-offset="-7">‹ Previous Week</button><button type="button" data-week-offset="7">Next Week ›</button>';
+  document.querySelector(".week-calendar>header").append(navigation);
+  navigation.querySelectorAll("button").forEach(button=>button.onclick=async()=>{
+    navigation.querySelectorAll("button").forEach(control=>control.disabled=true);
+    const previousDate=new Date(bookingWeekDate);
+    bookingWeekDate.setDate(bookingWeekDate.getDate()+Number(button.dataset.weekOffset));
+    try{await bookings()}catch(error){
+      bookingWeekDate=previousDate;
+      navigation.querySelectorAll("button").forEach(control=>control.disabled=false);
+      say(error.message);
+    }
+  });
   document.querySelector("#newitem").onclick=()=>leads.length?meetingModal(leads):say("No leads found for this company");
   document.querySelectorAll("[data-edit-booking]").forEach(button=>button.onclick=()=>editMeetingModal(items.find(item=>item._id===button.dataset.editBooking),leads));
 };

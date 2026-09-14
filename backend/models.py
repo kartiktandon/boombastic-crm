@@ -122,6 +122,9 @@ class LeadUpdate(BaseModel):
 class LeadStatusUpdate(BaseModel): status: LeadStatus
 
 class Meeting(BaseModel):
+    remark: Optional[str] = Field(default=None, max_length=5000)
+    number_of_people: Optional[int] = Field(default=None, ge=1, le=2147483647)
+    area: Optional[str] = Field(default=None, max_length=300)
     lead_id: str
     title: str = Field(min_length=2, max_length=180)
     scheduled_at: datetime
@@ -134,6 +137,9 @@ class Meeting(BaseModel):
     summary: Optional[str] = Field(default=None, max_length=5000)
 
 class MeetingUpdate(BaseModel):
+    remark: Optional[str] = Field(default=None, max_length=5000)
+    number_of_people: Optional[int] = Field(default=None, ge=1, le=2147483647)
+    area: Optional[str] = Field(default=None, max_length=300)
     title: Optional[str] = Field(default=None, min_length=2, max_length=180)
     scheduled_at: Optional[datetime] = None
     duration_minutes: Optional[int] = Field(default=None, ge=15, le=480)

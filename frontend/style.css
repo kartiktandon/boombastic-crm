@@ -608,3 +608,8 @@ body::before{display:none}
 @media(max-width:1500px){#leadbody .filters{grid-template-columns:repeat(3,minmax(0,1fr))}#leadbody .filters .searchbox{grid-column:span 2}}
 @media(max-width:760px){#leadbody .filters{grid-template-columns:repeat(2,minmax(0,1fr))}#leadbody .filters .searchbox,#leadbody .filters .btn{grid-column:1 / -1}.lead-filter-summary{font-size:12px}}
 @media(max-width:420px){#leadbody .filters{grid-template-columns:minmax(0,1fr)}#leadbody .filters .searchbox{grid-column:auto}}
+.modalfoot .booking-delete{margin-right:auto;background:#fff1f2;border:1px solid #fecaca;color:#b91c1c}
+.modalfoot .booking-delete:hover{background:#fee2e2}
+.modalfoot .booking-delete:focus-visible{outline:2px solid #b91c1c;outline-offset:2px}
+.modalfoot .booking-delete:disabled{opacity:.6;cursor:wait}
+@media(max-width:480px){.modalfoot:has(.booking-delete){flex-wrap:wrap}.modalfoot .booking-delete{flex-basis:100%;margin-right:0}}
