@@ -531,6 +531,7 @@ body::before{display:none}
   background:linear-gradient(120deg,#fff 65%,var(--tint));
   box-shadow:0 3px 12px rgba(45,25,65,.035);
 }
+.lead-kpis button.metric{width:100%;font:inherit;color:inherit;cursor:pointer;text-align:left;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}.lead-kpis button.metric:hover{transform:translateY(-2px);box-shadow:0 12px 25px rgba(52,31,70,.12)}.lead-kpis button.metric.active{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent),0 10px 24px rgba(52,31,70,.12)}.lead-kpis button.metric:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35%,transparent);outline-offset:2px}
 .lead-kpis .metric:before{
   content:"";
   position:absolute;
@@ -550,7 +551,7 @@ body::before{display:none}
   color:var(--accent);
   font-size:25px;
 }
-.lead-kpis .metric>div{min-width:0}
+.lead-kpis .metric>div,.lead-kpis .metric>span:last-child{min-width:0}
 .lead-kpis .metric b{
   color:#292132;
   font-size:clamp(28px,2.6vw,38px);

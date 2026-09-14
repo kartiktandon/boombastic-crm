@@ -68,7 +68,7 @@ async def create_lead(lead: LeadCreate, current_user: dict = Depends(get_current
 @router.get("/")
 async def list_leads(
     status: str | None = None, stage: str | None = None, source: str | None = None, assigned_to: str | None = None, business_unit: str | None = None,
-    service: str | None = None, q: str | None = None, follow_up: str | None = None, page: int = Query(1, ge=1),
+    service: str | None = None, q: str | None = None, follow_up: str | None = None, category: str | None = None, page: int = Query(1, ge=1),
     created_from: datetime | None = None, created_to: datetime | None = None,
     limit: int = Query(50, ge=1, le=100), sort: str = "newest", _: dict = Depends(get_current_user),
 ):
@@ -79,6 +79,11 @@ async def list_leads(
         if value: query[field] = value
     if stage:
         query["$or"] = [{"stage": stage}, {"stage": {"$exists": False}, "status": stage}]
+    if category == "follow_up":
+        follow_up_stages = ["follow_up", "call_back", "ringing"]
+        query["$or"] = [{"stage": {"$in": follow_up_stages}}, {"stage": {"$exists": False}, "status": {"$in": follow_up_stages}}]
+    elif category == "dead":
+        query["status"] = {"$in": ["lost", "not_interested"]}
     if service == "Other":
         query["service"] = {"$nin": ["Walk-in", "Birthday Party", "Corporate Event", "Kitty Party", "Wedding", "Private Event"]}
     if q:
