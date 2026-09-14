@@ -69,6 +69,7 @@ async def create_lead(lead: LeadCreate, current_user: dict = Depends(get_current
 async def list_leads(
     status: str | None = None, stage: str | None = None, source: str | None = None, assigned_to: str | None = None, business_unit: str | None = None,
     service: str | None = None, q: str | None = None, follow_up: str | None = None, page: int = Query(1, ge=1),
+    created_from: datetime | None = None, created_to: datetime | None = None,
     limit: int = Query(50, ge=1, le=100), sort: str = "newest", _: dict = Depends(get_current_user),
 ):
     query = {}
@@ -91,6 +92,10 @@ async def list_leads(
     elif follow_up == "today": query["next_follow_up"] = {"$gte": today, "$lt": today + timedelta(days=1)}
     elif follow_up == "upcoming": query["next_follow_up"] = {"$gte": today, "$lt": today + timedelta(days=8)}
     elif follow_up == "none": query["next_follow_up"] = None
+    if created_from or created_to:
+        query["created_at"] = {}
+        if created_from: query["created_at"]["$gte"] = created_from
+        if created_to: query["created_at"]["$lt"] = created_to
     sort_field, direction = ("created_at", -1) if sort == "newest" else ("name", 1)
     total = await leads_collection.count_documents(query)
     docs = await leads_collection.find(query).sort(sort_field, direction).skip((page - 1) * limit).limit(limit).to_list(limit)
