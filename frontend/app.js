@@ -55,20 +55,35 @@ function kolkataGreeting(){
  const greeting=hour<12?"Good Morning":hour<17?"Good Afternoon":"Good Evening";
  return `${greeting}, ${esc(state.user?.name||"User")}!`;
 }
+function localDateTimeValue(date){
+ const pad=value=>String(value).padStart(2,"0");
+ return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
 function leadDateBounds(period,from="",to=""){
  const now=new Date(),start=new Date(now),end=new Date(now);
  if(period==="Custom Range"){
   const customEnd=to?new Date(to+"T00:00:00"):null;
   if(customEnd)customEnd.setDate(customEnd.getDate()+1);
-  return {created_from:from?new Date(from+"T00:00:00").toISOString():"",created_to:customEnd?customEnd.toISOString():""};
+  return {created_from:from?from+"T00:00:00":"",created_to:customEnd?localDateTimeValue(customEnd):""};
  }
  if(!period)return {};
  if(period==="Today")start.setHours(0,0,0,0);
  else if(period==="This Week"){start.setDate(now.getDate()-((now.getDay()+6)%7));start.setHours(0,0,0,0)}
  else if(period==="This Month")start.setDate(1),start.setHours(0,0,0,0);
  else start.setMonth(0,1),start.setHours(0,0,0,0);
- if(period==="Today"){end.setHours(0,0,0,0);end.setDate(end.getDate()+1);return {created_from:start.toISOString(),created_to:end.toISOString()}}
- return {created_from:start.toISOString()};
+ if(period==="Today"){end.setHours(0,0,0,0);end.setDate(end.getDate()+1);return {created_from:localDateTimeValue(start),created_to:localDateTimeValue(end)}}
+ return {created_from:localDateTimeValue(start)};
+}
+async function filteredLeadPages(query){
+ const params=new URLSearchParams(query);params.set("limit","100");params.delete("page");
+ const items=[];
+ for(let page=1;;page++){
+  params.set("page",String(page));
+  const result=await api("/leads/?"+params);
+  items.push(...(result.items||[]));
+  if(items.length>=result.total||!result.items?.length)break;
+ }
+ return items;
 }
 async function render(){if(!state.token)return login();try{if(state.view==="dashboard")return dashboard();if(state.view==="leads")return leads();if(state.view==="followups")return followups();if(state.view==="bookings")return bookings();if(state.view==="reports")return reports();if(state.view==="agreements")return settingsPage();return projects()}catch(e){shell(`<div class="empty">Could not load this workspace.<br/><small>${esc(e.message)}</small></div>`)}}
 async function leads(){
@@ -76,15 +91,16 @@ async function leads(){
  shell(leadQuote+`<div id="leadbody"><div class="empty">Loading leads…</div></div>`);
  const qs=new URLSearchParams(Object.entries({...state.filters,business_unit:state.businessUnit,page:state.leadPage,limit:state.leadPageSize}).filter(([,v])=>v));
  Object.entries(leadDateBounds(state.leadPeriod,state.leadFrom,state.leadTo)).filter(([,value])=>value).forEach(([key,value])=>qs.set(key,value));
- const [data,a,people,assignmentData]=await Promise.all([api("/leads/?"+qs),api("/leads/analytics"+(state.businessUnit?"?"+companySearch():"")),api("/people/"),dashboardLeads()]);
+ const [data,summaryLeads,people,assignmentData]=await Promise.all([api("/leads/?"+qs),filteredLeadPages(qs),api("/people/"),dashboardLeads()]);
  const pageCount=Math.max(1,Math.ceil(data.total/state.leadPageSize));
  if(state.leadPage>pageCount){state.leadPage=pageCount;return leads()}
  state.leads=data.items;
  state.people=people;
  const footer=leadPagination(data.total);
- const today=state.leads.filter(l=>l.created_at&&new Date(l.created_at).toDateString()===new Date().toDateString()).length;
- const interested=(a.by_status.interested||0), followups=(a.by_stage.follow_up||0)+(a.by_stage.call_back||0)+(a.by_stage.ringing||0), dead=(a.by_status.lost||0)+(a.by_status.not_interested||0);
- const cards=[["people",a.total,"TOTAL LEADS"],["calendar",today,"TODAY'S LEADS"],["clock",followups,"FOLLOW-UP"],["heart",interested,"INTERESTED"],["trophy",a.won,"CLOSED / WON"],["close",dead,"DEAD LEADS"],["new",a.by_status.new||0,"NEW"],["contacted",a.by_status.contacted||0,"CONTACTED"]];
+ const today=summaryLeads.filter(l=>l.created_at&&new Date(l.created_at).toDateString()===new Date().toDateString()).length;
+ const byStatus=summaryLeads.reduce((counts,lead)=>{const status=currentLeadStatus(lead);if(status)counts[status]=(counts[status]||0)+1;return counts},{}),byStage=summaryLeads.reduce((counts,lead)=>{const stage=currentLeadStage(lead);if(stage)counts[stage]=(counts[stage]||0)+1;return counts},{});
+ const interested=byStatus.interested||0,followups=(byStage.follow_up||0)+(byStage.call_back||0)+(byStage.ringing||0),dead=(byStatus.lost||0)+(byStatus.not_interested||0);
+ const cards=[["people",summaryLeads.length,"TOTAL LEADS"],["calendar",today,"TODAY'S LEADS"],["clock",followups,"FOLLOW-UP"],["heart",interested,"INTERESTED"],["trophy",byStatus.won||0,"CLOSED / WON"],["close",dead,"DEAD LEADS"],["new",byStatus.new||0,"NEW"],["contacted",byStatus.contacted||0,"CONTACTED"]];
  const tableView=`<div class="table-wrap"><table class="leads-table"><thead><tr><th>Lead Name</th><th>Contact</th><th>Source</th><th>Status / Stage</th><th>Follow-up</th><th>Assigned To</th><th>Action</th></tr></thead><tbody>${state.leads.length?state.leads.map(leadRow).join(""):`<tr><td colspan="7" class="empty">No leads match these filters.</td></tr>`}</tbody></table>${footer}</div>`;
  const cardView=`<div class="lead-cards">${state.leads.length?state.leads.map(leadCard).join(""):`<div class="empty">No leads match these filters.</div>`}</div>${footer}`;
  const body=document.querySelector("#leadbody");body.innerHTML=`<div class="kpi-row lead-kpis">${cards.map(([icon,n,label],i)=>`<div class="metric m${i}"><span class="metric-icon">${({people:"♙",calendar:"▣",clock:"◷",heart:"♡",trophy:"♕",close:"×",new:"＋",contacted:"☎"})[icon]}</span><div><b>${n}</b><small>${label}</small></div></div>`).join("")}</div><section class="leads-panel"><div class="leads-title"><h1>All Leads</h1><div class="view-switch" aria-label="Lead display"><button data-lead-view="table" class="${state.leadView==="table"?"active":""}" title="Table view">▤ <span>Table</span></button><button data-lead-view="cards" class="${state.leadView==="cards"?"active":""}" title="Card view">▦ <span>Cards</span></button></div></div><div class="filters"><label class="searchbox">⌕<input id="search" placeholder="Search leads by name, phone, or email..." value="${esc(state.filters.q)}"/></label><select id="event" aria-label="Event type"><option value="">All Event Types</option>${["Walk-in","Birthday Party","Corporate Event","Kitty Party","Wedding","Private Event","Other"].map(x=>`<option value="${esc(x)}" ${state.filters.service===x?"selected":""}>${esc(x)}</option>`).join("")}</select><select id="stage"><option value="">All Stages</option>${["new","contacted","interested","call_back","meeting_done","proposal_sent","packages_sent","low_budget","on_hold","not_interested","won","lost","ringing"].map(x=>`<option ${state.filters.status===x?"selected":""} value="${x}">${stageLabel(x)}</option>`).join("")}</select><button class="btn primary" id="addlead">＋ Add New Lead</button></div>${state.leadView==="cards"?cardView:tableView}</section>`;
