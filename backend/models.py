@@ -24,6 +24,17 @@ class UserRegister(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     role: Literal["admin", "sales_lead", "sales_rep", "delivery"] = "sales_rep"
 
+class PersonCreate(BaseModel):
+    name: str = Field(min_length=2, max_length=100)
+    email: Optional[str] = Field(default=None, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    phone: Optional[str] = Field(default=None, max_length=40)
+
+class PersonUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=2, max_length=100)
+    email: Optional[str] = Field(default=None, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    phone: Optional[str] = Field(default=None, max_length=40)
+    active: Optional[bool] = None
+
 class BusinessSettings(BaseModel):
     business_name: str = Field(default="Boombastic", min_length=2, max_length=120)
     business_type: str = Field(default="Entertainment & Events", max_length=120)
@@ -61,6 +72,7 @@ class LeadBase(BaseModel):
     stage: Optional[LeadStage] = None
     temperature: Literal["hot", "warm", "cold"] = "warm"
     assigned_to: Optional[str] = Field(default=None, max_length=120)
+    assigned_to_id: Optional[str] = Field(default=None, max_length=40)
     event_date: Optional[datetime] = None
     next_follow_up: Optional[datetime] = None
     last_follow_up_completed_at: Optional[datetime] = None
@@ -96,6 +108,7 @@ class LeadUpdate(BaseModel):
     stage: Optional[LeadStage] = None
     temperature: Optional[Literal["hot", "warm", "cold"]] = None
     assigned_to: Optional[str] = Field(default=None, max_length=120)
+    assigned_to_id: Optional[str] = Field(default=None, max_length=40)
     event_date: Optional[datetime] = None
     next_follow_up: Optional[datetime] = None
     last_follow_up_completed_at: Optional[datetime] = None

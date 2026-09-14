@@ -6,13 +6,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from routes import leads, meetings, proposals, agreements, projects, dashboard, auth, meta, settings
-from db import leads_collection, meetings_collection, proposals_collection, agreements_collection, projects_collection, users_collection
+from routes import leads, meetings, proposals, agreements, projects, dashboard, auth, meta, settings, people
+from db import leads_collection, meetings_collection, proposals_collection, agreements_collection, projects_collection, users_collection, people_collection
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     await users_collection.create_index("email", unique=True)
+    await people_collection.create_index([("owner_id", 1), ("active", 1), ("name", 1)])
     await leads_collection.create_index([("status", 1), ("created_at", -1)])
     await leads_collection.create_index([("assigned_to", 1), ("next_follow_up", 1)])
     await leads_collection.create_index([("business_unit", 1), ("created_at", -1)])
@@ -48,6 +49,7 @@ app.include_router(projects.router)
 app.include_router(dashboard.router)
 app.include_router(meta.router)
 app.include_router(settings.router)
+app.include_router(people.router)
 
 
 @app.get("/")

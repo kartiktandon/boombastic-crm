@@ -6,7 +6,7 @@ from fastapi.responses import StreamingResponse
 from gridfs.errors import NoFile
 
 from auth import get_current_user
-from db import attachments_bucket, leads_collection
+from db import attachments_bucket, leads_collection, people_collection
 from models import LeadCreate, LeadStatusUpdate, LeadUpdate, Note
 from utils import serialize, serialize_list, to_object_id
 
@@ -18,6 +18,25 @@ ALLOWED_ATTACHMENT_EXTENSIONS = {".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt
 
 def activity(kind: str, message: str, user: dict):
     return {"type": kind, "message": message, "created_by": user.get("name"), "created_at": datetime.utcnow()}
+
+async def resolve_assignee(data: dict, user: dict) -> None:
+    """Keep the stored display name in sync with an assignable person id."""
+    if "assigned_to_id" not in data:
+        return
+    person_id = data.get("assigned_to_id")
+    if not person_id:
+        data["assigned_to_id"] = None
+        if not data.get("assigned_to"):
+            data["assigned_to"] = None
+        return
+    person = await people_collection.find_one({
+        "_id": to_object_id(person_id),
+        "owner_id": user["_id"],
+        "active": {"$ne": False},
+    })
+    if not person:
+        raise HTTPException(status_code=400, detail="Selected person is not available")
+    data["assigned_to"] = person["name"]
 
 @router.get("/stages")
 async def list_stages(_: dict = Depends(get_current_user)):
@@ -40,6 +59,7 @@ async def analytics(business_unit: str | None = None, _: dict = Depends(get_curr
 @router.post("/", status_code=201)
 async def create_lead(lead: LeadCreate, current_user: dict = Depends(get_current_user)):
     data = lead.model_dump()
+    await resolve_assignee(data, current_user)
     now = datetime.utcnow()
     data.update({"created_at": now, "updated_at": now, "created_by": current_user["_id"], "notes": [], "activities": [activity("created", "Lead created", current_user)]})
     result = await leads_collection.insert_one(data)
@@ -86,11 +106,16 @@ async def get_lead(lead_id: str, _: dict = Depends(get_current_user)):
 async def update_lead(lead_id: str, update: LeadUpdate, current_user: dict = Depends(get_current_user)):
     payload = update.model_dump(exclude_unset=True)
     if not payload: raise HTTPException(status_code=400, detail="No changes supplied")
+    lead_oid = to_object_id(lead_id)
+    existing = await leads_collection.find_one({"_id": lead_oid})
+    if not existing: raise HTTPException(status_code=404, detail="Lead not found")
+    await resolve_assignee(payload, current_user)
     payload["updated_at"] = datetime.utcnow()
-    payload["activities"] = activity("updated", "Lead details updated", current_user)
-    result = await leads_collection.update_one({"_id": to_object_id(lead_id)}, {"$set": {k: v for k, v in payload.items() if k != "activities"}, "$push": {"activities": payload["activities"]}})
-    if not result.matched_count: raise HTTPException(status_code=404, detail="Lead not found")
-    return serialize(await leads_collection.find_one({"_id": to_object_id(lead_id)}))
+    assignment_changed = "assigned_to" in payload and payload.get("assigned_to") != existing.get("assigned_to")
+    message = f"Lead assigned to {payload.get('assigned_to') or 'no one'}" if assignment_changed else "Lead details updated"
+    payload["activities"] = activity("assignment" if assignment_changed else "updated", message, current_user)
+    await leads_collection.update_one({"_id": lead_oid}, {"$set": {k: v for k, v in payload.items() if k != "activities"}, "$push": {"activities": payload["activities"]}})
+    return serialize(await leads_collection.find_one({"_id": lead_oid}))
 
 @router.patch("/{lead_id}/status")
 async def update_lead_status(lead_id: str, update: LeadStatusUpdate, current_user: dict = Depends(get_current_user)):
