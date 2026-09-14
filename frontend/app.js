@@ -55,7 +55,7 @@ async function render(){if(!state.token)return login();try{if(state.view==="dash
 async function leads(){
  shell(quote+`<div id="leadbody"><div class="empty">Loading leads…</div></div>`);
  const qs=new URLSearchParams(Object.entries({...state.filters,business_unit:state.businessUnit,page:state.leadPage,limit:state.leadPageSize}).filter(([,v])=>v));
- const [data,a,people]=await Promise.all([api("/leads/?"+qs),api("/leads/analytics"+(state.businessUnit?"?"+companySearch():"")),api("/people/")]);
+ const [data,a,people,assignmentData]=await Promise.all([api("/leads/?"+qs),api("/leads/analytics"+(state.businessUnit?"?"+companySearch():"")),api("/people/"),dashboardLeads()]);
  const pageCount=Math.max(1,Math.ceil(data.total/state.leadPageSize));
  if(state.leadPage>pageCount){state.leadPage=pageCount;return leads()}
  state.leads=data.items;
@@ -70,6 +70,19 @@ async function leads(){
  const stageSelect=document.querySelector("#stage");stageSelect.innerHTML=`<option value="">All Stages</option>${leadStages.map(value=>`<option value="${value}" ${state.filters.stage===value?"selected":""}>${stageLabel(value)}</option>`).join("")}`;
  const statusSelect=document.createElement("select");statusSelect.id="status";statusSelect.setAttribute("aria-label","Lead status");statusSelect.innerHTML=`<option value="">All Status</option>${leadStatuses.map(value=>`<option value="${value}" ${state.filters.status===value?"selected":""}>${nice(value)}</option>`).join("")}`;stageSelect.before(statusSelect);
  document.querySelector("#search").oninput=e=>filter("q",e.target.value);document.querySelector("#source").onchange=e=>filter("source",e.target.value);document.querySelector("#event").onchange=e=>filter("service",e.target.value);statusSelect.onchange=e=>filter("status",e.target.value);stageSelect.onchange=e=>filter("stage",e.target.value);
+ const assignmentCounts=new Map();
+ assignmentData.items.forEach(lead=>{if(lead.assigned_to)assignmentCounts.set(lead.assigned_to,(assignmentCounts.get(lead.assigned_to)||0)+1)});
+ const assignmentNames=[...new Set([...people.map(person=>person.name),...assignmentCounts.keys(),...(state.filters.assigned_to?[state.filters.assigned_to]:[])])].sort((a,b)=>a.localeCompare(b));
+ const personSelect=document.createElement("select");
+ personSelect.id="lead-person-filter";
+ personSelect.setAttribute("aria-label","Filter leads by assigned person");
+ personSelect.innerHTML='<option value="">All People</option>'+assignmentNames.map(name=>`<option value="${esc(name)}" ${state.filters.assigned_to===name?"selected":""}>${esc(name)} (${assignmentCounts.get(name)||0} leads)</option>`).join("");
+ document.querySelector("#addlead").before(personSelect);
+ personSelect.onchange=event=>{state.filters.assigned_to=event.target.value;state.leadPage=1;leads()};
+ const resultSummary=document.createElement("p");
+ resultSummary.className="lead-filter-summary";
+ resultSummary.textContent=`${data.total} matching lead${data.total===1?"":"s"}${state.filters.assigned_to?" assigned to "+state.filters.assigned_to:""}. People counts show all leads in the selected company.`;
+ document.querySelector(".filters").after(resultSummary);
  document.querySelectorAll("[data-lead-page]").forEach(button=>button.onclick=()=>{state.leadPage=Number(button.dataset.leadPage);leads()});
  document.querySelector("#lead-page-size").onchange=e=>{state.leadPageSize=Number(e.target.value);state.leadPage=1;leads()};
  document.querySelector("#addlead").onclick=leadModal;document.querySelectorAll("[data-detail]").forEach(b=>b.onclick=()=>leadDetail(b.dataset.detail));document.querySelectorAll("[data-lead-view]").forEach(b=>b.onclick=()=>{state.leadView=b.dataset.leadView;localStorage.setItem("crm_lead_view",state.leadView);leads()});
@@ -136,10 +149,30 @@ async function leadDetail(id){
 }
 function analyticsModal(a){modal("Lead analytics",`<div class="kpis"><div class="kpi"><small>Conversion</small><b>${a.conversion}%</b></div><div class="kpi"><small>Won</small><b>${a.won}</b></div><div class="kpi"><small>Pipeline</small><b>${a.total}</b></div><div class="kpi"><small>Platforms</small><b>${Object.keys(a.by_platform).length}</b></div></div><div class="panel"><b>By stage</b><br/>${Object.entries(a.by_stage).map(([k,v])=>`<span class="chip ${k}" style="margin:10px 5px 0 0">${nice(k)} · ${v}</span>`).join("")}</div>`,async()=>{})}
 function exportCsv(){const rows=[["Name","Company","Email","Phone","Stage","Platform","Follow-up"],...state.leads.map(l=>[l.name,l.company,l.email,l.phone,l.status,l.source,l.next_follow_up||""])];const blob=new Blob([rows.map(r=>r.map(x=>JSON.stringify(x||"")).join(",")).join("\n")],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="leads.csv";a.click();URL.revokeObjectURL(a.href)}
+async function dashboardLeads(){
+ const query=new URLSearchParams({limit:"100"});
+ if(state.businessUnit)query.set("business_unit",state.businessUnit);
+ const items=[];
+ for(let page=1;;page++){
+  query.set("page",String(page));
+  const result=await api("/leads/?"+query);
+  items.push(...result.items);
+  if(items.length>=result.total||!result.items.length)break;
+ }
+ return {items};
+}
+function dashboardStatusParts(leads){
+ const counts=new Map();
+ for(const lead of leads)counts.set(lead.status,(counts.get(lead.status)||0)+1);
+ const parts=[["New",counts.get("new")||0,"#3976e6"],["Contacted",counts.get("contacted")||0,"#823bc5"],["Interested",counts.get("interested")||0,"#6bc315"],["Won",counts.get("won")||0,"#18a99e"],["Not Interested",counts.get("not_interested")||0,"#f4a21a"],["Lost",counts.get("lost")||0,"#ef3035"]];
+ const other=leads.filter(lead=>!leadStatuses.includes(lead.status)).length;
+ if(other)parts.push(["Other / legacy status",other,"#8b8995"]);
+ return parts;
+}
 async function dashboard(){
  const dashQuote=`<section class="quote dashboard-quote"><div><b>👋 &nbsp; GOOD AFTERNOON, ${(state.user?.role||"admin").toUpperCase()}!</b><p>Here's what's happening with your leads for the selected period.</p></div><div class="period-control"><select id="dashboard-period" aria-label="Dashboard period">${["This Week","This Month","This Year","Custom Range"].map(x=>`<option ${state.dashboardPeriod===x?"selected":""}>${x}</option>`).join("")}</select><span class="custom-dates ${state.dashboardPeriod==="Custom Range"?"show":""}"><input id="dashboard-from" type="date" aria-label="From date" value="${state.dashboardFrom}"/><input id="dashboard-to" type="date" aria-label="To date" value="${state.dashboardTo}"/></span></div></section>`;
  shell(dashQuote+`<div id="dash" class="empty">Loading dashboard…</div>`);
- const [d,leadData,allMeetings]=await Promise.all([api("/dashboard/summary"),api("/leads/?limit=100"+(state.businessUnit?"&"+companySearch():"")),api("/meetings/")]),selectedLeadIds=new Set((leadData.items||[]).map(l=>l._id)),meetingData=state.businessUnit?(allMeetings||[]).filter(m=>selectedLeadIds.has(m.lead_id)):allMeetings;
+ const [leadData,allMeetings]=await Promise.all([dashboardLeads(),api("/meetings/")]),selectedLeadIds=new Set((leadData.items||[]).map(l=>l._id)),meetingData=state.businessUnit?(allMeetings||[]).filter(m=>selectedLeadIds.has(m.lead_id)):allMeetings;
  const ls=dashboardScope(leadData.items||[],state.dashboardPeriod,state.dashboardFrom,state.dashboardTo), by=ls.reduce((o,l)=>(o[l.status]=(o[l.status]||0)+1,o),{}), won=by.won||0, interested=by.interested||0, follow=(by.follow_up||0)+(by.call_back||0)+(by.ringing||0), dead=(by.lost||0)+(by.not_interested||0);
  const dayStart=new Date();dayStart.setHours(0,0,0,0);const dayEnd=new Date(dayStart);dayEnd.setDate(dayEnd.getDate()+1);const dueToday=ls.filter(l=>l.next_follow_up&&new Date(l.next_follow_up)>=dayStart&&new Date(l.next_follow_up)<dayEnd).length;
  const newCount=by.new||0;
@@ -148,7 +181,7 @@ async function dashboard(){
  const followups=ls.filter(l=>l.next_follow_up).sort((a,b)=>new Date(a.next_follow_up)-new Date(b.next_follow_up)).slice(0,4);
  const teams=Object.values(ls.reduce((all,l)=>{const name=l.assigned_to||"Admin User";all[name]??={name,total:0,won:0};all[name].total++;if(l.status==="won")all[name].won++;return all},{})).slice(0,3);
  const bookings=(meetingData||[]).filter(m=>new Date(m.scheduled_at)>=new Date()).slice(0,3);
- const total=Math.max(ls.length,1), parts=[["Follow-up",follow,"#823bc5"],["Interested",interested,"#6bc315"],["Closed",won,"#18a99e"],["Dead",dead,"#ef3035"],["New",newCount,"#3976e6"]];
+ const total=Math.max(ls.length,1), parts=dashboardStatusParts(ls);
  document.querySelector("#dash").outerHTML=`<div id="dash" class="dashboard-body"><div class="kpi-row dashboard-kpis">${kpis.map(([icon,n,label],i)=>`<div class="metric m${i}"><span class="metric-icon">${icon}</span><div><b>${n}</b><small>${label}</small></div></div>`).join("")}</div><div class="dash-grid"><section class="dash-card performance"><h2>Lead Performance</h2><div class="chart-key"><span><i></i>Leads</span><span><i></i>Bookings</span></div><svg viewBox="0 0 620 210" role="img" aria-label="Lead performance chart"><defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9148d5" stop-opacity=".24"/><stop offset="1" stop-color="#9148d5" stop-opacity="0"/></linearGradient></defs><g class="grid-lines"><path d="M35 20H600M35 75H600M35 130H600M35 185H600"/></g><path class="area" d="M60 120 L230 52 L400 84 L570 32 L570 185 L60 185Z"/><polyline class="lead-line" points="60,120 230,52 400,84 570,32"/><polyline class="booking-line" points="60,157 230,126 400,107 570,88"/>${[[60,120,30],[230,52,60],[400,84,50],[570,32,70]].map(([x,y,n])=>`<g><circle class="lead-dot" cx="${x}" cy="${y}" r="5"/><text x="${x}" y="${y-13}">${n}</text></g>`).join("")}${[[60,157,10],[230,126,20],[400,107,25],[570,88,31]].map(([x,y,n])=>`<g><circle class="booking-dot" cx="${x}" cy="${y}" r="5"/><text x="${x}" y="${y-13}">${n}</text></g>`).join("")}<text x="55" y="204">W1</text><text x="225" y="204">W2</text><text x="395" y="204">W3</text><text x="565" y="204">W4</text></svg></section><section class="dash-card status-card"><h2>Lead Status</h2><div class="status-content"><div class="donut" style="--follow:${follow/total*100}deg"><div><b>${ls.length}</b><small>Total Leads</small></div></div><div class="legend">${parts.map(([label,n,color])=>`<div><i style="background:${color}"></i><span>${label}</span><b>${n}</b></div>`).join("")}</div></div></section><section class="dash-card follow-card"><h2>Today's Follow-ups</h2><table><thead><tr><th>Contact</th><th>Event Type</th><th>Follow-up Time</th><th>Status</th><th>Action</th></tr></thead><tbody>${followups.length?followups.map(l=>`<tr><td><div class="mini-contact"><span>${initials(l.name)}</span><b>${esc(l.name)}<small>${esc(l.phone||"—")}</small></b></div></td><td>${esc(l.service||"Birthday Party")}</td><td>◷ &nbsp; ${new Date(l.next_follow_up).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})}</td><td><span class="status ${l.status}">${nice(l.status==="call_back"?"Follow-up":l.status)}</span></td><td><a href="tel:${esc(l.phone||"")}">⌕ &nbsp; Call</a></td></tr>`).join(""):`<tr><td colspan="5" class="empty">No follow-ups scheduled.</td></tr>`}</tbody></table><button class="view-all" data-nav="followups">View All Follow-ups &nbsp; ›</button></section><div class="dash-stack"><section class="dash-card team-card"><h2>Team Performance</h2><table><thead><tr><th>Team Member</th><th>Assigned Leads</th><th>Closed Leads</th><th>Progress</th></tr></thead><tbody>${teams.length?teams.map(t=>{const pct=Math.round(t.won/Math.max(t.total,1)*100);return `<tr><td><span class="team-avatar">${initials(t.name)}</span>${esc(t.name)}</td><td>${t.total}</td><td>${t.won}</td><td><span class="progress"><i style="width:${pct}%"></i></span>${pct}%</td></tr>`}).join(""):`<tr><td colspan="4" class="empty">No team data yet.</td></tr>`}</tbody></table></section><section class="dash-card bookings-card"><h2>Upcoming Bookings <button data-nav="bookings">View All</button></h2><div class="booking-list">${bookings.length?bookings.map(m=>{const dt=new Date(m.scheduled_at);return `<article><time><b>${dt.getDate()}</b>${dt.toLocaleDateString("en-US",{month:"short"})}</time><div><b>${esc(m.title)}</b><span>${dt.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})}</span><small>${nice(m.mode)}</small></div></article>`}).join(""):`<p class="empty">No upcoming bookings.</p>`}</div></section></div></div></div>`;
  document.querySelectorAll("#dash .status.call_back, #dash .status.follow_up").forEach(element=>element.textContent=stageLabel(element.classList.contains("call_back")?"call_back":"follow_up"));
  document.querySelector(".performance svg").outerHTML=dashboardPerformanceChart(leadData.items||[],meetingData||[],state.dashboardPeriod,state.dashboardFrom,state.dashboardTo);

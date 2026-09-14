@@ -602,3 +602,9 @@ body::before{display:none}
 .status.low_budget,.chip.low_budget{background:#fff3dc;color:#95600c}
 .lead-card-rich .lead-badges .status.packages_sent{background:#7135a5;color:#fff}
 .lead-card-rich .lead-badges .status.low_budget{background:#95600c;color:#fff}
+#leadbody .filters{grid-template-columns:minmax(220px,2fr) repeat(5,minmax(110px,1fr)) auto}
+#lead-person-filter{width:100%;text-overflow:ellipsis}
+.lead-filter-summary{margin:0 3px 14px;color:#6f6478;font-size:13px;line-height:1.5}
+@media(max-width:1500px){#leadbody .filters{grid-template-columns:repeat(3,minmax(0,1fr))}#leadbody .filters .searchbox{grid-column:span 2}}
+@media(max-width:760px){#leadbody .filters{grid-template-columns:repeat(2,minmax(0,1fr))}#leadbody .filters .searchbox,#leadbody .filters .btn{grid-column:1 / -1}.lead-filter-summary{font-size:12px}}
+@media(max-width:420px){#leadbody .filters{grid-template-columns:minmax(0,1fr)}#leadbody .filters .searchbox{grid-column:auto}}
