@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from gridfs.errors import NoFile
 
-from auth import get_current_user
+from auth import get_current_user, is_admin, require_admin, workspace_id
 from db import attachments_bucket, leads_collection, people_collection
 from models import LeadCreate, LeadStatusUpdate, LeadUpdate, Note
 from utils import serialize, serialize_list, to_object_id
@@ -31,12 +31,28 @@ async def resolve_assignee(data: dict, user: dict) -> None:
         return
     person = await people_collection.find_one({
         "_id": to_object_id(person_id),
-        "owner_id": user["_id"],
+        "owner_id": workspace_id(user),
         "active": {"$ne": False},
     })
     if not person:
         raise HTTPException(status_code=400, detail="Selected person is not available")
     data["assigned_to"] = person["name"]
+
+
+def ensure_can_edit(lead: dict, user: dict) -> None:
+    if is_admin(user):
+        return
+    if not user.get("person_id") or lead.get("assigned_to_id") != user["person_id"]:
+        raise HTTPException(status_code=403, detail="You can only edit leads assigned to you")
+
+
+async def editable_lead(lead_id: str, user: dict) -> tuple:
+    lead_oid = to_object_id(lead_id)
+    lead = await leads_collection.find_one({"_id": lead_oid})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    ensure_can_edit(lead, user)
+    return lead_oid, lead
 
 @router.get("/stages")
 async def list_stages(_: dict = Depends(get_current_user)):
@@ -59,6 +75,11 @@ async def analytics(business_unit: str | None = None, _: dict = Depends(get_curr
 @router.post("/", status_code=201)
 async def create_lead(lead: LeadCreate, current_user: dict = Depends(get_current_user)):
     data = lead.model_dump()
+    if not is_admin(current_user):
+        if not current_user.get("person_id"):
+            raise HTTPException(status_code=403, detail="Your account is not linked to a person")
+        data["assigned_to_id"] = current_user["person_id"]
+        data["assigned_to"] = current_user.get("name")
     await resolve_assignee(data, current_user)
     now = datetime.utcnow()
     data.update({"created_at": now, "updated_at": now, "created_by": current_user["_id"], "notes": [], "activities": [activity("created", "Lead created", current_user)]})
@@ -116,9 +137,10 @@ async def get_lead(lead_id: str, _: dict = Depends(get_current_user)):
 async def update_lead(lead_id: str, update: LeadUpdate, current_user: dict = Depends(get_current_user)):
     payload = update.model_dump(exclude_unset=True)
     if not payload: raise HTTPException(status_code=400, detail="No changes supplied")
-    lead_oid = to_object_id(lead_id)
-    existing = await leads_collection.find_one({"_id": lead_oid})
-    if not existing: raise HTTPException(status_code=404, detail="Lead not found")
+    lead_oid, existing = await editable_lead(lead_id, current_user)
+    if not is_admin(current_user):
+        payload.pop("assigned_to_id", None)
+        payload.pop("assigned_to", None)
     await resolve_assignee(payload, current_user)
     payload["updated_at"] = datetime.utcnow()
     assignment_changed = "assigned_to" in payload and payload.get("assigned_to") != existing.get("assigned_to")
@@ -129,15 +151,17 @@ async def update_lead(lead_id: str, update: LeadUpdate, current_user: dict = Dep
 
 @router.patch("/{lead_id}/status")
 async def update_lead_status(lead_id: str, update: LeadStatusUpdate, current_user: dict = Depends(get_current_user)):
-    result = await leads_collection.update_one({"_id": to_object_id(lead_id)}, {"$set": {"status": update.status, "updated_at": datetime.utcnow()}, "$push": {"activities": activity("stage", f"Stage changed to {update.status.replace('_', ' ')}", current_user)}})
+    lead_oid, _ = await editable_lead(lead_id, current_user)
+    result = await leads_collection.update_one({"_id": lead_oid}, {"$set": {"status": update.status, "updated_at": datetime.utcnow()}, "$push": {"activities": activity("stage", f"Stage changed to {update.status.replace('_', ' ')}", current_user)}})
     if not result.matched_count: raise HTTPException(status_code=404, detail="Lead not found")
     return {"ok": True}
 
 @router.post("/{lead_id}/notes")
 async def add_note(lead_id: str, note: Note, current_user: dict = Depends(get_current_user)):
+    lead_oid, _ = await editable_lead(lead_id, current_user)
     data = note.model_dump()
     data["created_by"] = current_user.get("name")
-    result = await leads_collection.update_one({"_id": to_object_id(lead_id)}, {"$push": {"notes": data, "activities": activity("note", "Added a note", current_user)}, "$set": {"updated_at": datetime.utcnow()}})
+    result = await leads_collection.update_one({"_id": lead_oid}, {"$push": {"notes": data, "activities": activity("note", "Added a note", current_user)}, "$set": {"updated_at": datetime.utcnow()}})
     if not result.matched_count: raise HTTPException(status_code=404, detail="Lead not found")
     return {"ok": True}
 
@@ -164,9 +188,7 @@ async def upload_attachment(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
 ):
-    lead_oid = to_object_id(lead_id)
-    if not await leads_collection.find_one({"_id": lead_oid}, {"_id": 1}):
-        raise HTTPException(status_code=404, detail="Lead not found")
+    lead_oid, _ = await editable_lead(lead_id, current_user)
     filename = Path(file.filename or "attachment").name
     if Path(filename).suffix.lower() not in ALLOWED_ATTACHMENT_EXTENSIONS:
         raise HTTPException(status_code=400, detail="Unsupported file type")
@@ -215,7 +237,8 @@ async def download_attachment(lead_id: str, attachment_id: str, _: dict = Depend
 
 @router.delete("/{lead_id}/attachments/{attachment_id}", status_code=204)
 async def delete_attachment(lead_id: str, attachment_id: str, current_user: dict = Depends(get_current_user)):
-    lead_oid, attachment_oid = to_object_id(lead_id), to_object_id(attachment_id)
+    lead_oid, _ = await editable_lead(lead_id, current_user)
+    attachment_oid = to_object_id(attachment_id)
     try:
         stream = await attachments_bucket.open_download_stream(attachment_oid)
     except NoFile:
@@ -230,7 +253,8 @@ async def delete_attachment(lead_id: str, attachment_id: str, current_user: dict
     )
 
 @router.delete("/{lead_id}", status_code=204)
-async def delete_lead(lead_id: str, _: dict = Depends(get_current_user)):
+async def delete_lead(lead_id: str, current_user: dict = Depends(get_current_user)):
+    require_admin(current_user)
     lead_oid = to_object_id(lead_id)
     result = await leads_collection.delete_one({"_id": lead_oid})
     if not result.deleted_count: raise HTTPException(status_code=404, detail="Lead not found")

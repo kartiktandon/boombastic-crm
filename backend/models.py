@@ -24,16 +24,24 @@ class UserRegister(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     role: Literal["admin", "sales_lead", "sales_rep", "delivery"] = "sales_rep"
 
+class PasswordChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=8, max_length=128)
+
 class PersonCreate(BaseModel):
     name: str = Field(min_length=2, max_length=100)
-    email: Optional[str] = Field(default=None, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
     phone: Optional[str] = Field(default=None, max_length=40)
+    password: str = Field(min_length=8, max_length=128)
+    role: Literal["admin", "member"] = "member"
 
 class PersonUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=2, max_length=100)
     email: Optional[str] = Field(default=None, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
     phone: Optional[str] = Field(default=None, max_length=40)
     active: Optional[bool] = None
+    password: Optional[str] = Field(default=None, min_length=8, max_length=128)
+    role: Optional[Literal["admin", "member"]] = None
 
 class BusinessSettings(BaseModel):
     business_name: str = Field(default="Boombastic", min_length=2, max_length=120)

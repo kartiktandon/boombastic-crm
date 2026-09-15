@@ -1,18 +1,22 @@
 let activeSettingsTab = "business";
 
 function personEditor(person = null) {
+  if (state.user?.role !== "admin") return say("Only admins can manage user accounts");
   const editing = Boolean(person);
   modal(editing ? "Edit Person" : "Add Person", `
     <p class="modal-subtitle">People added here can be assigned to leads. This does not create a login account.</p>
     <div class="formgrid">
       <div class="field full"><label>Name *</label><input name="name" required minlength="2" value="${esc(person?.name || "")}" placeholder="e.g. Rahul Mehta"/></div>
-      <div class="field"><label>Email</label><input name="email" type="email" value="${esc(person?.email || "")}" placeholder="rahul@example.com"/></div>
+      <div class="field"><label>Login Email *</label><input name="email" type="email" required value="${esc(person?.email || "")}" placeholder="rahul@example.com"/></div>
       <div class="field"><label>Phone</label><input name="phone" type="tel" value="${esc(person?.phone || "")}" placeholder="98765 43210"/></div>
+      <div class="field"><label>${editing ? "New Password" : "Password *"}</label><input name="password" type="password" minlength="8" ${editing ? "" : "required"} autocomplete="new-password" placeholder="Minimum 8 characters"/></div>
+      <div class="field"><label>Role</label><select name="role"><option value="member" ${person?.role !== "admin" ? "selected" : ""}>Member</option><option value="admin" ${person?.role === "admin" ? "selected" : ""}>Admin</option></select></div>
     </div>`,
     async data => {
       const values = Object.fromEntries(data);
       values.email = values.email || null;
       values.phone = values.phone || null;
+      if (!values.password) delete values.password;
       await api(editing ? `/people/${person._id}` : "/people/", {
         method: editing ? "PATCH" : "POST",
         body: JSON.stringify(values),
@@ -30,11 +34,12 @@ async function settingsPage() {
   state.people = people;
   const checked = value => value ? "checked" : "";
   const active = tab => activeSettingsTab === tab ? "active" : "";
+  const canManagePeople = state.user?.role === "admin";
   const channel = (icon, name, key) => `<article><i>${icon}</i><div><b>${name}</b><small class="${s.channels?.[key] ? "connected" : ""}">● ${s.channels?.[key] ? "Connected" : "Not connected"}</small></div><button type="button" data-channel="${name}">Manage</button></article>`;
   const peopleList = people.length ? people.map(person => `<article class="person-row">
     <span class="person-avatar">${initials(person.name)}</span>
-    <div><b>${esc(person.name)}</b><small>${esc(person.email || person.phone || "No contact details")}</small></div>
-    <div class="person-actions"><button type="button" data-edit-person="${person._id}">Edit</button><button type="button" data-remove-person="${person._id}">Remove</button></div>
+    <div><b>${esc(person.name)}</b><small>${esc(person.email || person.phone || "No contact details")} · ${person.role === "admin" ? "Admin" : "Member"}</small></div>
+    ${canManagePeople ? `<div class="person-actions"><button type="button" data-edit-person="${person._id}">Edit</button><button type="button" data-remove-person="${person._id}">Remove</button></div>` : ""}
   </article>`).join("") : `<div class="people-empty"><b>No people added yet</b><span>Add a team member to start assigning leads.</span></div>`;
 
   document.querySelector(".settings-loading").outerHTML = `<div class="settings-head"><h1>Settings</h1><p>Manage your CRM preferences and workspace.</p></div><form id="settings-form"><div class="settings-layout">
@@ -47,10 +52,10 @@ async function settingsPage() {
     </nav>
     <div class="settings-main">
       <section class="settings-section ${active("business")}" data-settings-panel="business"><h2>Business Profile</h2><p>Business information shown across your CRM.</p><div class="settings-card"><h3>Business Information</h3><div class="business-info"><div class="business-logo"><img src="logo.png?v=4" alt="Boombastic logo"/><small>Workspace logo</small></div><div class="settings-fields"><label>Business Name<input name="business_name" required value="${esc(s.business_name)}"/></label><label>Business Type<select name="business_type">${["Entertainment & Events","Event Management","Hospitality","Other"].map(x => `<option ${s.business_type === x ? "selected" : ""}>${x}</option>`).join("")}</select></label><label>Email<input name="business_email" type="email" value="${esc(s.business_email || "")}"/></label><label>Phone Number<input name="business_phone" type="tel" value="${esc(s.business_phone || "")}"/></label><label>Website<input name="website" placeholder="https://..." value="${esc(s.website || "")}"/></label><label>Address<input name="address" value="${esc(s.address || "")}"/></label><label class="wide">Time Zone<select name="timezone"><option value="Asia/Kolkata" ${s.timezone === "Asia/Kolkata" ? "selected" : ""}>(GMT+05:30) India Standard Time</option><option value="UTC" ${s.timezone === "UTC" ? "selected" : ""}>UTC</option></select></label></div></div></div></section>
-      <section class="settings-section ${active("people")}" data-settings-panel="people"><div class="people-heading"><div><h2>People</h2><p>Add the team members who can own and follow up on leads.</p></div><button class="btn primary" id="add-person" type="button">＋ Add Person</button></div><div class="settings-card people-list">${peopleList}</div><p class="people-footnote">Removing a person prevents new assignments. Their name remains on existing leads for your records.</p></section>
+      <section class="settings-section ${active("people")}" data-settings-panel="people"><div class="people-heading"><div><h2>People</h2><p>${canManagePeople ? "Create login accounts and assign roles for your team." : "View the people in your workspace."}</p></div>${canManagePeople ? `<button class="btn primary" id="add-person" type="button">＋ Add Person</button>` : ""}</div><div class="settings-card people-list">${peopleList}</div><p class="people-footnote">Admins can create credentials, assign roles, and manage access.</p></section>
       <section class="settings-section ${active("leads")}" data-settings-panel="leads"><h2>Lead Management</h2><p>Control ownership, reminders and inactive leads.</p><div class="settings-card settings-fields"><label>Default Lead Owner<select name="default_lead_owner">${assigneeOptions("",s.default_lead_owner || "")}</select></label><label>Follow-up Reminder<select name="followup_reminder_minutes">${[[15,"15 minutes before"],[30,"30 minutes before"],[60,"1 hour before"],[1440,"1 day before"]].map(([v,n]) => `<option value="${v}" ${s.followup_reminder_minutes === v ? "selected" : ""}>${n}</option>`).join("")}</select></label><label>Lead Inactivity Rule<select name="inactivity_days">${[3,7,14,30].map(v => `<option value="${v}" ${s.inactivity_days === v ? "selected" : ""}>Mark cold after ${v} days</option>`).join("")}</select></label><label class="switch-row">Automatically assign new leads<input name="auto_assign_leads" type="checkbox" ${checked(s.auto_assign_leads)}/><span></span></label></div></section>
       <section class="settings-section ${active("notifications")}" data-settings-panel="notifications"><h2>Notifications</h2><p>Choose the alerts you want the CRM to show.</p><div class="settings-card toggle-list">${[["notify_new_leads","New lead alerts","Notify when a lead enters the CRM."],["notify_followups","Follow-up reminders","Receive reminders before scheduled follow-ups."],["notify_bookings","Booking reminders","Notify about upcoming scheduled bookings."]].map(([key,title,copy]) => `<label><span><b>${title}</b><small>${copy}</small></span><input name="${key}" type="checkbox" ${checked(s[key])}/><i></i></label>`).join("")}</div></section>
-      <section class="settings-section ${active("security")}" data-settings-panel="security"><h2>Data & Security</h2><p>Your account and workspace security information.</p><div class="settings-card security-list"><div><b>Signed-in account</b><span>${esc(state.user?.email || "—")}</span></div><div><b>Role</b><span>${nice(state.user?.role || "admin")}</span></div><div><b>Session security</b><span>Authentication is required for every CRM request.</span></div><button type="button" id="settings-signout" class="btn">Sign out of this device</button></div></section>
+      <section class="settings-section ${active("security")}" data-settings-panel="security"><h2>Data & Security</h2><p>Your account and workspace security information.</p><div class="settings-card security-list"><div><b>Signed-in account</b><span>${esc(state.user?.email || "—")}</span></div><div><b>Role</b><span>${nice(state.user?.role || "admin")}</span></div><div><b>Session security</b><span>Authentication is required for every CRM request.</span></div><div class="password-change"><b>Change Password</b><label>Current Password<input id="current-password" type="password" autocomplete="current-password"/></label><label>New Password<input id="new-password" type="password" minlength="8" autocomplete="new-password"/></label><label>Confirm New Password<input id="confirm-password" type="password" minlength="8" autocomplete="new-password"/></label><button type="button" id="change-password" class="btn primary">Change Password</button></div><button type="button" id="settings-signout" class="btn">Sign out of this device</button></div></section>
     </div><aside class="channels-card"><h2>Connected Channels</h2><p>Manage lead sources and communication channels.</p>${channel("∞","Meta Leads","meta_leads")}${channel("◎","Instagram","instagram")}${channel("◉","WhatsApp Business","whatsapp")}${channel("⊕","Website Forms","website_forms")}</aside></div><footer class="settings-save"><button type="button" class="btn" id="settings-cancel">Cancel</button><button class="btn primary" type="submit">▣ &nbsp; Save Changes</button></footer></form>`;
 
   document.querySelectorAll("[data-settings-tab]").forEach(button => button.onclick = () => {
@@ -59,7 +64,7 @@ async function settingsPage() {
     document.querySelectorAll("[data-settings-panel]").forEach(x => x.classList.toggle("active", x.dataset.settingsPanel === activeSettingsTab));
   });
   document.querySelectorAll("[data-channel]").forEach(button => button.onclick = () => say(`${button.dataset.channel} is configured from your deployment settings`));
-  document.querySelector("#add-person").onclick = () => personEditor();
+  const addPerson = document.querySelector("#add-person"); if (addPerson) addPerson.onclick = () => personEditor();
   document.querySelectorAll("[data-edit-person]").forEach(button => button.onclick = () => personEditor(people.find(person => person._id === button.dataset.editPerson)));
   document.querySelectorAll("[data-remove-person]").forEach(button => button.onclick = async () => {
     const person = people.find(item => item._id === button.dataset.removePerson);
@@ -76,6 +81,18 @@ async function settingsPage() {
     }
   });
   document.querySelector("#settings-signout").onclick = logout;
+  document.querySelector("#change-password").onclick = async event => {
+    const current = document.querySelector("#current-password"), next = document.querySelector("#new-password"), confirmPassword = document.querySelector("#confirm-password"), button = event.currentTarget;
+    if (!current.value || next.value.length < 8) return say("Enter your current password and a new password of at least 8 characters");
+    if (next.value !== confirmPassword.value) return say("New passwords do not match");
+    button.disabled = true;
+    try {
+      await api("/auth/change-password", {method:"POST",body:JSON.stringify({current_password:current.value,new_password:next.value})});
+      current.value = next.value = confirmPassword.value = "";
+      say("Password changed successfully");
+    } catch (error) { say(error.message); }
+    finally { button.disabled = false; }
+  };
   document.querySelector("#settings-cancel").onclick = settingsPage;
   document.querySelector("#settings-form").onsubmit = async event => {
     event.preventDefault();

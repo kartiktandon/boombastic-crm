@@ -35,13 +35,13 @@ def create_access_token(user_id: str, email: str) -> str:
 
 
 async def get_current_user(token: str | None = Depends(oauth2_scheme)) -> dict:
-    if not token:
-        return {"_id": "demo-user", "name": "Demo User", "email": "demo@pulse.local", "role": "admin"}
     credentials_error = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    if not token:
+        raise credentials_error
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
@@ -56,3 +56,16 @@ async def get_current_user(token: str | None = Depends(oauth2_scheme)) -> dict:
     user["_id"] = str(user["_id"])
     user.pop("hashed_password", None)
     return user
+
+
+def is_admin(user: dict) -> bool:
+    return user.get("role") == "admin"
+
+
+def workspace_id(user: dict) -> str:
+    return str(user.get("workspace_id") or user["_id"])
+
+
+def require_admin(user: dict) -> None:
+    if not is_admin(user):
+        raise HTTPException(status_code=403, detail="Admin access required")

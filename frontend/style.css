@@ -510,6 +510,8 @@ body::before{display:none}
 .delete-lead-button:hover{background:#fee2e2;border-color:#f87171}
 .delete-lead-button:focus-visible{outline:2px solid #b91c1c;outline-offset:3px}
 .delete-lead-button:disabled{opacity:.6;cursor:wait}
+.lead-readonly-notice{margin:12px 0;padding:10px 12px;border:1px solid #e6d49b;border-radius:9px;background:#fff9e6;color:#765b09;font-size:12px;font-weight:600}
+.password-change{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr)) auto!important;gap:10px!important;align-items:end!important;padding:16px 0!important}.password-change>b{grid-column:1/-1}.password-change label{display:grid;gap:6px;color:#68606f;font-size:10px;text-transform:uppercase}.password-change input{height:40px;padding:0 11px;border:1px solid #ded9e1;border-radius:7px;font:500 12px 'DM Sans',sans-serif}.password-change button{height:40px}@media(max-width:760px){.password-change{grid-template-columns:1fr!important}.password-change>b{grid-column:auto}}
 
 /* Lead summary cards */
 .lead-kpis{

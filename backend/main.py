@@ -13,6 +13,7 @@ from db import leads_collection, meetings_collection, proposals_collection, agre
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     await users_collection.create_index("email", unique=True)
+    await users_collection.create_index("person_id", unique=True, sparse=True)
     await people_collection.create_index([("owner_id", 1), ("active", 1), ("name", 1)])
     await leads_collection.create_index([("status", 1), ("created_at", -1)])
     await leads_collection.create_index([("assigned_to", 1), ("next_follow_up", 1)])
