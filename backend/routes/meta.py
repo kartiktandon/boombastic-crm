@@ -72,6 +72,14 @@ def normalize_meta_lead(payload: dict[str, Any], notification: dict[str, Any]) -
         "phone", "mobile_number", "city", "company_name", "company",
     }
     custom_fields = {key: value for key, value in fields.items() if key not in standard_fields}
+    service = first_value(
+        fields,
+        "event_type",
+        "type_of_event",
+        "event",
+        "which_event_are_you_planning",
+        "what_type_of_event_are_you_planning",
+    )
     form_id = str(payload.get("form_id") or notification.get("form_id") or "").strip()
     now = datetime.utcnow()
 
@@ -83,6 +91,7 @@ def normalize_meta_lead(payload: dict[str, Any], notification: dict[str, Any]) -
         "city": first_value(fields, "city"),
         "source": "meta",
         "campaign": f"Meta form {form_id}" if form_id else "Meta Lead Ad",
+        "service": service,
         "status": "new",
         "temperature": "warm",
         "tags": ["meta-lead-ad"],

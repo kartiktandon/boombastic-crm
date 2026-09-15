@@ -93,6 +93,7 @@ def test_normalizes_phone_only_lead_and_custom_fields():
             "field_data": [
                 {"name": "full_name", "values": ["Asha Singh"]},
                 {"name": "phone_number", "values": ["+91 90000 00000"]},
+                {"name": "event_type", "values": ["Birthday Party"]},
                 {"name": "preferred_party_date", "values": ["Sunday"]},
             ],
         },
@@ -103,8 +104,12 @@ def test_normalizes_phone_only_lead_and_custom_fields():
     assert lead["email"] is None
     assert lead["phone"] == "+91 90000 00000"
     assert lead["source"] == "meta"
+    assert lead["service"] == "Birthday Party"
     assert lead["meta_lead_id"] == "lead-123"
-    assert lead["meta_fields"] == {"preferred_party_date": ["Sunday"]}
+    assert lead["meta_fields"] == {
+        "event_type": ["Birthday Party"],
+        "preferred_party_date": ["Sunday"],
+    }
 
 
 def test_valid_webhook_inserts_once_and_deduplicates(monkeypatch):
