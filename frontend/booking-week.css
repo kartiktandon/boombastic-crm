@@ -20,7 +20,7 @@
 .week-hours span{position:absolute;right:8px;font-size:11px;color:#807688;line-height:18px}
 .week-day{position:relative;border-left:1px solid #eee9f2;background:repeating-linear-gradient(to bottom,#e9e4ee 0,#e9e4ee 1px,transparent 1px,transparent 30px,#f5f2f7 30px,#f5f2f7 31px,transparent 31px,transparent 60px)}
 .week-event-slot{position:absolute;z-index:1;min-width:0}
-.week-event-slot:hover,.week-event-slot:focus-within{z-index:10}
+.week-event-slot:hover,.week-event-slot:focus-within{z-index:2}
 .week-event{position:relative;width:100%;height:100%;z-index:1;border:1px solid #b28ada;border-left:3px solid #813cc0;border-radius:5px;background:#eee3fa;color:#50227b;text-align:left;padding:2px 5px;overflow:hidden;cursor:pointer;min-width:0;font-family:inherit}
 .week-event strong,.week-event span,.week-event small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:15px}
 .week-event .week-event-timing{margin-bottom:2px}

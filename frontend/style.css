@@ -628,3 +628,5 @@ body::before{display:none}
 .modalfoot .booking-delete:focus-visible{outline:2px solid #b91c1c;outline-offset:2px}
 .modalfoot .booking-delete:disabled{opacity:.6;cursor:wait}
 @media(max-width:480px){.modalfoot:has(.booking-delete){flex-wrap:wrap}.modalfoot .booking-delete{flex-basis:100%;margin-right:0}}
+.mini-calendar .week span{display:block;min-width:0;text-align:center;font-size:8px;font-weight:700;line-height:1.2}
+.modalback{z-index:100}
