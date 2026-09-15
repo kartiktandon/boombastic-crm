@@ -19,8 +19,15 @@
 .week-hours{position:relative;background:#fff;z-index:2}
 .week-hours span{position:absolute;right:8px;font-size:11px;color:#807688;line-height:18px}
 .week-day{position:relative;border-left:1px solid #eee9f2;background:repeating-linear-gradient(to bottom,#e9e4ee 0,#e9e4ee 1px,transparent 1px,transparent 30px,#f5f2f7 30px,#f5f2f7 31px,transparent 31px,transparent 60px)}
-.week-event{position:absolute;z-index:1;border:1px solid #b28ada;border-left:3px solid #813cc0;border-radius:5px;background:#eee3fa;color:#50227b;text-align:left;padding:2px 5px;overflow:hidden;cursor:pointer;min-width:0;font-family:inherit}
+.week-event-slot{position:absolute;z-index:1;min-width:0}
+.week-event-slot:hover,.week-event-slot:focus-within{z-index:10}
+.week-event{position:relative;width:100%;height:100%;z-index:1;border:1px solid #b28ada;border-left:3px solid #813cc0;border-radius:5px;background:#eee3fa;color:#50227b;text-align:left;padding:2px 5px;overflow:hidden;cursor:pointer;min-width:0;font-family:inherit}
 .week-event strong,.week-event span,.week-event small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:15px}
+.week-event .week-event-timing{margin-bottom:2px}
+.week-event small b{font-weight:700}
+.week-event .week-event-remark{margin-top:2px}
+.week-event-slot .booking-event-popover{top:calc(100% + 5px);left:0}
+.week-body>.week-day:nth-child(n+7) .booking-event-popover{right:0;left:auto}
 .week-event:focus-visible{outline:2px solid #592b96;outline-offset:1px;z-index:3}
 .week-event.is-completed{background:#e1f4ec;color:#226449;border-color:#83c4a8}
 .week-event.is-cancelled{background:#efedf0;color:#807586;border-color:#c7becb;text-decoration:line-through}
