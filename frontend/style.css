@@ -635,7 +635,7 @@ body::before{display:none}
 #toast{opacity:0;visibility:hidden;pointer-events:none}
 #toast.show{opacity:1;visibility:visible;pointer-events:auto}
 @media(max-width:760px){
-  .shell{padding-top:58px;padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+  .shell{padding-top:58px;padding-bottom:calc(98px + env(safe-area-inset-bottom))}
   .topbar{height:58px;padding-inline:12px;gap:8px}
   .topbar h1{max-width:none;min-width:0;flex:1;font-size:16px}
   .topbar .user-avatar,.topbar>b{display:none!important}
@@ -643,10 +643,10 @@ body::before{display:none}
   .company-switcher select{width:106px;min-width:106px;font-size:10px}
   .logout-button{flex:0 0 40px;width:40px;height:40px}
   .content{padding:12px 10px 22px}
-  .side{height:70px;bottom:calc(7px + env(safe-area-inset-bottom))}
-  .side .nav{height:58px}
-  .side .nav button,.side .nav button:hover,.side .nav button:focus,.side .nav button:active{height:58px;font-size:8px;line-height:1.05}
-  .side .nav button span{height:28px;font-size:18px}
+  .side{height:76px;bottom:calc(7px + env(safe-area-inset-bottom))}
+  .side .nav{height:64px}
+  .side .nav button,.side .nav button:hover,.side .nav button:focus,.side .nav button:active{height:64px;gap:3px;font-size:9px;font-weight:600;line-height:1.05;white-space:normal}
+  .side .nav button span{height:29px;font-size:19px}
   .filters input,.filters select,.searchbox input{font-size:16px}
   .follow-metric:last-child:nth-child(odd){grid-column:1/-1}
   .follow-tabs{width:100%;overflow-x:auto;scrollbar-width:none}
