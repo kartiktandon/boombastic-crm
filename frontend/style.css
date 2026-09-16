@@ -630,3 +630,55 @@ body::before{display:none}
 @media(max-width:480px){.modalfoot:has(.booking-delete){flex-wrap:wrap}.modalfoot .booking-delete{flex-basis:100%;margin-right:0}}
 .mini-calendar .week span{display:block;min-width:0;text-align:center;font-size:8px;font-weight:700;line-height:1.2}
 .modalback{z-index:100}
+
+/* Final mobile layout corrections. Keep desktop dimensions unchanged. */
+#toast{opacity:0;visibility:hidden;pointer-events:none}
+#toast.show{opacity:1;visibility:visible;pointer-events:auto}
+@media(max-width:760px){
+  .shell{padding-top:58px;padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+  .topbar{height:58px;padding-inline:12px;gap:8px}
+  .topbar h1{max-width:none;min-width:0;flex:1;font-size:16px}
+  .topbar .user-avatar,.topbar>b{display:none!important}
+  .company-switcher{flex:0 0 auto;margin:0;padding:3px 4px}
+  .company-switcher select{width:106px;min-width:106px;font-size:10px}
+  .logout-button{flex:0 0 40px;width:40px;height:40px}
+  .content{padding:12px 10px 22px}
+  .side{height:70px;bottom:calc(7px + env(safe-area-inset-bottom))}
+  .side .nav{height:58px}
+  .side .nav button,.side .nav button:hover,.side .nav button:focus,.side .nav button:active{height:58px;font-size:8px;line-height:1.05}
+  .side .nav button span{height:28px;font-size:18px}
+  .filters input,.filters select,.searchbox input{font-size:16px}
+  .follow-metric:last-child:nth-child(odd){grid-column:1/-1}
+  .follow-tabs{width:100%;overflow-x:auto;scrollbar-width:none}
+  .follow-tabs::-webkit-scrollbar{display:none}
+  .follow-tabs button{flex:1;min-width:76px;padding-inline:8px;white-space:nowrap}
+  .performance svg,.report-line svg{min-width:0;width:100%}
+  .performance,.report-line{overflow:hidden}
+  .report-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .report-metric{height:92px;min-width:0;padding:10px;gap:8px}
+  .report-metric>i,.report-metric.rm4>i,.report-metric.rm5>i{min-width:36px;width:36px;height:36px;font-size:18px}
+  .report-metric>span,.report-metric.rm4>span,.report-metric.rm5>span{max-width:calc(100% - 44px)}
+  .report-metric b,.report-metric.rm4 b,.report-metric.rm5 b{font-size:clamp(17px,5.2vw,22px)}
+  .report-metric.rm4 b,.report-metric.rm5 b{font-size:15px;letter-spacing:-.45px}
+  .report-metric small{font-size:7.5px;white-space:normal;line-height:1.2}
+  .report-line .report-legend{position:static;margin:-2px 12px 2px;text-align:center;font-size:9px}
+  .report-line h2{margin-bottom:7px;text-align:center}
+  .settings-tabs{overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:none}
+  .settings-tabs::-webkit-scrollbar{display:none}
+}
+@media(max-width:390px){
+  .topbar h1{max-width:none;font-size:15px}
+  .company-switcher select{width:112px;min-width:112px;font-size:9px}
+  .lead-kpis .metric{padding:12px 9px;gap:7px}
+  .lead-kpis .metric .metric-icon{width:31px;height:31px;flex-basis:31px;font-size:17px}
+  .lead-kpis .metric b{font-size:23px}
+  .lead-kpis .metric small{font-size:7px;letter-spacing:.2px}
+}
+@media(max-width:340px){
+  .topbar h1{font-size:14px}
+  .company-switcher select{width:96px;min-width:96px}
+  .report-metrics{grid-template-columns:1fr}
+  .report-metric{padding-inline:18px}
+  .report-metric>span,.report-metric.rm4>span,.report-metric.rm5>span{max-width:calc(100% - 52px)}
+  .report-metric.rm4 b,.report-metric.rm5 b{font-size:18px}
+}
